@@ -245,8 +245,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 /* DOC PREVIEW */
 #prev-wrap{width:100%;max-width:700px;margin:0 auto;background:white;
   box-shadow:0 0 30px rgba(0,0,0,.1);border-radius:4px;overflow:hidden;font-family:'DM Sans',sans-serif;}
-.dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden}
-.dl{width:180px;height:auto;min-height:100%;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:6px 8px;background:#0D3B36;box-sizing:border-box}
+.dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden;min-height:100px}
+.dl{width:210px;height:100%;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:5px 8px;background:#0D3B36;box-sizing:border-box;align-self:stretch}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
 .dn{font-family:'Cormorant Garamond',serif;font-size:29px;color:#C9A961;font-weight:700;font-style:italic;letter-spacing:.3px;line-height:1.2}
 .ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:400;text-transform:uppercase}
@@ -1504,15 +1504,15 @@ function prevDoc(type,id){
       ${d.hinw?`<div class="dhinw">${d.hinw}</div>`:''}
       ${acc}
       
-      <!-- QR CODE links über Fußzeile - nur bei Rechnungen -->
+      <!-- QR CODE - links oben über Fußzeile -->
       ${!isA && C.iban ? `
-      <div style="padding:12px 22px;border-top:1px solid #EEF2F1;background:#F7F9F8">
-        <div style="display:inline-flex;align-items:center;gap:12px">
-          <div id="qr-${d.id}" style="width:75px;height:75px;flex-shrink:0"></div>
-          <div>
-            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Zahlung per QR-Code (GiroCode)</div>
-            <div style="font-size:9.5px;color:#444;line-height:1.7">Scannen Sie mit Ihrer Banking-App.<br>Alle Daten werden automatisch übernommen.</div>
-            <div style="font-size:8.5px;color:#8FA8A4;margin-top:2px">${euro(d.gesamt||0)} · Ref: ${d.nr}</div>
+      <div style="padding:10px 22px;border-top:1px solid #EEF2F1;background:#F7F9F8;text-align:left">
+        <div style="display:flex;flex-direction:row;align-items:flex-start;justify-content:flex-start;gap:12px;max-width:300px">
+          <div id="qr-${d.id}" style="width:75px;height:75px;flex-shrink:0;display:block"></div>
+          <div style="text-align:left">
+            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Zahlung per QR-Code</div>
+            <div style="font-size:9px;color:#444;line-height:1.7">Scannen mit Banking-App.<br>Alle Daten automatisch übernommen.</div>
+            <div style="font-size:8.5px;color:#8FA8A4;margin-top:2px">${euro(d.gesamt||0)} · ${d.nr}</div>
           </div>
         </div>
       </div>` : ''}
