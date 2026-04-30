@@ -1136,6 +1136,14 @@ const firebaseConfig = {
 
 
 firebase.initializeApp(firebaseConfig);
+
+// Login Button sicher registrieren
+document.addEventListener('DOMContentLoaded', function(){
+  const loginBtn = document.getElementById('login-btn');
+  if(loginBtn) loginBtn.onclick = doLogin;
+  const pwField = document.getElementById('l-pw');
+  if(pwField) pwField.addEventListener('keypress', function(e){ if(e.key==='Enter') doLogin(); });
+});
 emailjs.init('v5WRshMNtFVNfv6rB');
 
 // Kunden-Ansicht: nach Firebase init laden
