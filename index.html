@@ -1504,6 +1504,11 @@ function prevDoc(type,id){
       ${d.hinw?`<div class="dhinw">${d.hinw}</div>`:''}
       ${acc}
       
+
+
+      <!-- SPACER - drückt alles nach unten -->
+      <div style="flex:1;min-height:20px"></div>
+      
       <!-- QR CODE - direkt über Fußzeile, linksbündig -->
       ${!isA && C.iban ? `
       <div style="padding:10px 22px 8px;border-top:1px solid #EEF2F1;background:#F7F9F8">
@@ -1516,9 +1521,6 @@ function prevDoc(type,id){
           </div>
         </div>
       </div>` : ''}
-
-      <!-- SPACER - drückt Fußzeile nach unten -->
-      <div style="flex:1;min-height:20px"></div>
       
       <!-- FUSSZEILE - immer ganz unten -->
       <div class="dfoot">
