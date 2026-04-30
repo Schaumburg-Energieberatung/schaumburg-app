@@ -493,6 +493,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
       <div class="sb-lbl">Tools</div>
       <div class="ni" id="n-ausgaben" onclick="goto('ausgaben',this)"><span class="ni-ico">💸</span><span>Ausgaben</span></div>
       <div class="ni" id="n-foerder" onclick="goto('foerder',this)"><span class="ni-ico">🧮</span><span>Förderrechner</span></div>
+      <div class="ni" id="n-leistungen" onclick="goto('leistungen',this)"><span class="ni-ico">📝</span><span>Leistungen</span></div>
       <div class="ni" id="n-settings" onclick="goto('settings',this)"><span class="ni-ico">⚙️</span><span>Einstellungen</span></div>
     </div>
   </nav>
@@ -652,6 +653,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
       </div>
       <div class="card card-p" style="background:var(--goldll);border:1.5px solid rgba(201,169,97,.3)">
         <div style="font-size:12px;color:var(--dk);line-height:1.7">⚠️ <b>Hinweis:</b> BAFA-Förderung muss <b>VOR</b> Auftragserteilung beantragt werden. Förderhöhen können sich ändern. Ich übernehme die Antragstellung kostenfrei.</div>
+      </div>
+    </div>
+
+    <!-- LEISTUNGEN -->
+    <div class="page" id="page-leistungen">
+      <div class="card" style="max-width:800px">
+        <div class="card-head">
+          <div class="card-title">📝 Leistungen & Texte verwalten</div>
+          <button class="btn btn-gold btn-sm" onclick="openLeistung()">＋ Neue Leistung</button>
+        </div>
+        <div style="padding:12px 18px;background:var(--goldll);border-bottom:1px solid var(--g2);font-size:12px;color:var(--dk)">
+          💡 Diese Leistungen erscheinen im Dropdown beim Erstellen von Angeboten und Rechnungen. Der Standardtext wird automatisch ins Textfeld übernommen und kann dort angepasst werden.
+        </div>
+        <div class="tw">
+          <table class="tbl">
+            <thead><tr>
+              <th>Leistungsbezeichnung</th>
+              <th>Standardtext</th>
+              <th style="width:80px">Aktionen</th>
+            </tr></thead>
+            <tbody id="leistungen-body"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -976,6 +1000,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   </div>
 </div>
 
+
+<!-- LEISTUNG MODAL -->
+<div class="ov" id="m-leistung">
+  <div class="modal" style="width:560px">
+    <div class="mh"><div class="mt" id="m-l-title">📝 Neue Leistung</div><button class="mc" onclick="cm('m-leistung')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="l-idx">
+      <div class="fg" style="gap:12px">
+        <div class="fld fc">
+          <label>Leistungsbezeichnung (erscheint im Dropdown)</label>
+          <input id="l-name" placeholder="z.B. Heizlastberechnung (DIN EN 12831-1)">
+        </div>
+        <div class="fld fc">
+          <label>Standardtext (wird automatisch ins Textfeld übernommen)</label>
+          <textarea id="l-text" rows="5" placeholder="z.B. Raumweise Heizlastberechnung gemäß DIN EN 12831-1..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cm('m-leistung')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveLeistung()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1100,6 +1149,7 @@ async function loadAll(){
     S.rechnungen=rs.docs.map(d=>({id:d.id,...d.data()}));
     renderAll();
     loadAusgaben();
+    initLeistungen();
   }catch(e){console.error('load:',e);toast('Fehler beim Laden: '+e.message,'e')}
 }
 
@@ -1111,13 +1161,14 @@ function goto(page,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   $('page-'+page).classList.add('on');
   if(el)el.classList.add('on');
-  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',ausgaben:'Betriebsausgaben',foerder:'Förderrechner',settings:'Einstellungen'};
+  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',ausgaben:'Betriebsausgaben',leistungen:'Leistungen & Texte',foerder:'Förderrechner',settings:'Einstellungen'};
   $('tb-title').textContent=titles[page]||page;
   const acts=$('tb-acts');
   if(page==='angebote') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;angebot&quot;)'>+ Angebot</button>";
   else if(page==='rechnungen') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;rechnung&quot;)'>+ Rechnung</button>";
   else if(page==='kunden') acts.innerHTML="<button class='btn btn-gold' onclick='openKunde()'>+ Kunde</button>";
   else if(page==='ausgaben') acts.innerHTML="<button class='btn btn-gold' onclick='openAusgabe()'>+ Ausgabe</button>";
+  else if(page==='leistungen') acts.innerHTML="<button class='btn btn-gold' onclick='openLeistung()'>+ Leistung</button>";
   else acts.innerHTML='';
 }
 
@@ -1286,61 +1337,33 @@ function renderKunden(q=''){
 // DOK EDITOR
 const LEIST=[
   '– Auswählen –',
-  // ── BERATUNG ──
   'Kurzberatung vor Ort (ca. 1 Std.) – Erstgespräch Förderung & Machbarkeit',
   'Telefonische Beratung – Förderung & Machbarkeit (je angefangene Stunde)',
   'Vor-Ort-Beratung',
   'Energieberatung vor Ort (BAFA EBW) inkl. individuellem Sanierungsfahrplan (iSFP)',
-  'Honorar nach Aufwand',
-  'Gebäudeenergieberatung – Honorar nach Aufwand (Stundensatz)',
-  'Tagessatz Beratung',
+  'Honorar nach Aufwand (Stundensatz)',
   'Tagessatz Energieberatung (8 Std.)',
-  // ── iSFP ──
   'iSFP – 1-2 Familienhaus',
-  'iSFP – Individueller Sanierungsfahrplan (1-2 Familienhaus) gem. BAFA-Richtlinie EBW',
   'iSFP – Mehrfamilienhaus',
-  'iSFP – Individueller Sanierungsfahrplan (Mehrfamilienhaus ab 3 WE) gem. BAFA-Richtlinie EBW',
-  // ── ENERGIEAUSWEISE ──
   'Energiebedarfsausweis (GEG)',
-  'Energiebedarfsausweis gem. GEG 2023 (Bedarfsausweis)',
   'Energieverbrauchsausweis (GEG)',
-  'Energieverbrauchsausweis gem. GEG 2023 (Verbrauchsausweis)',
-  // ── HEIZLAST & HYDRAULIK ──
   'Heizlastberechnung (DIN EN 12831-1)',
-  'Heizlastberechnung gem. DIN EN 12831-1',
   'Hydraulischer Abgleich (Verfahren B)',
-  'Hydraulischer Abgleich Verfahren B gem. VDI 2073 / GEG § 60a',
   'Heizlast & Hydraul. Abgleich (Kombi)',
-  'Heizlastberechnung gem. DIN EN 12831-1 inkl. Hydraulischem Abgleich Verfahren B',
-  // ── WÄRMESCHUTZ ──
   'Sommerlicher Wärmeschutz (DIN 4108-2)',
-  'Sommerlicher Wärmeschutz gem. DIN 4108-2 – Nachweis und Beurteilung',
-  'Wärmebrückennachweis gem. DIN EN ISO 10211 / DIN 4108 Beiblatt 2',
-  'Schimmelgutachten / Feuchteschutznachweis gem. DIN 4108-3',
-  // ── GEBÄUDE ──
+  'Wärmebrückennachweis (DIN EN ISO 10211)',
+  'Schimmelgutachten / Feuchteschutz (DIN 4108-3)',
+  'Lüftungskonzept (DIN 1946-6)',
+  'Luftdichtheitskonzept / Blower-Door',
   'Gebäudebilanzierung Neubau (KfW)',
-  'Gebäudebilanzierung Neubau gem. GEG 2023 / KfW BEG WG',
-  'Luftdichtheitskonzept / Blower-Door-Vorbereitung gem. DIN EN ISO 9972',
-  'Lüftungskonzept gem. DIN 1946-6',
-  'Thermografie-Aufnahme',
-  'Thermografie-Aufnahme und Auswertung gem. DIN EN 13187',
-  // ── BAFA ──
+  'Thermografie-Aufnahme (DIN EN 13187)',
   'BAFA TPB – Techn. Projektbeschreibung',
-  'BAFA Technische Projektbeschreibung (TPB) – Antragstellung BEG EM',
   'BAFA TPN – Techn. Projektnachweis',
-  'BAFA Technischer Projektnachweis (TPN) – Verwendungsnachweis BEG EM',
-  // ── KfW ──
   'KfW BzA – Bestätigung zum Antrag',
-  'KfW Bestätigung zum Antrag (BzA) gem. BEG WG / BEG NWG',
   'KfW BnD – Bestätigung nach Durchführung',
-  'KfW Bestätigung nach Durchführung (BnD) gem. BEG WG / BEG NWG',
-  // ── BAUBEGLEITUNG ──
-  'Baubegleitung (je Termin)',
-  'Fachplanung & Baubegleitung gem. KfW BEG (Bundesförderung für effiziente Gebäude)',
-  'Baubegleitung – Einzeltermin vor Ort gem. KfW BEG Anforderungen',
-  // ── SONSTIGES ──
+  'Fachplanung & Baubegleitung (KfW BEG)',
+  'Baubegleitung – Einzeltermin vor Ort',
   'Anfahrtspauschale (über 30 km)',
-  'Anfahrtspauschale (Entfernung über 30 km, je Richtung)',
   '– Eigene Beschreibung –'
 ];
 let pCnt=0;
@@ -1430,7 +1453,7 @@ function addPos(data=null){
   const tbody=$('pos-body');
   const tr=document.createElement('tr');tr.id='p-'+id;
   tr.innerHTML=`<td style="font-weight:700;color:var(--dk)">${tbody.children.length+1}</td>
-    <td><select style="margin-bottom:4px;width:100%" onchange="onLS(${id},this.value)">${LEIST.map(l=>`<option${data&&data.desc===l?' selected':''}>${l}</option>`).join('')}</select>
+    <td><select style="margin-bottom:4px;width:100%" onchange="onLS(${id},this.value)"><option>– Auswählen –</option>${(S_leistungen.length?S_leistungen:LEIST.filter(l=>l!=='– Auswählen –'&&l!=='– Eigene Beschreibung –').map(l=>({name:l,text:LEIST_TEXT[l]||''}))).map(l=>`<option${data&&data.desc===l.name?' selected':''}>${l.name}</option>`).join('')}<option>– Eigene Beschreibung –</option></select>
     <input type="text" id="pd-${id}" placeholder="Beschreibung…" value="${data?.desc||''}" oninput="cSum()"></td>
     <td><input type="number" id="pm-${id}" value="${data?.menge??1}" min="0" step="0.5" oninput="cSum()"></td>
     <td><select id="pe-${id}">${['Pauschal','Std.','Tag','Stück','km','Termin'].map(e=>`<option${data?.einheit===e?' selected':''}>${e}</option>`).join('')}</select></td>
@@ -1440,7 +1463,50 @@ function addPos(data=null){
   tbody.appendChild(tr);cSum();
 }
 
-function onLS(id,v){if(v&&v!=='– Auswählen –'&&v!=='– Eigene Beschreibung –')$('pd-'+id).value=v;cSum()}
+const LEIST_TEXT = {
+  'Kurzberatung vor Ort (ca. 1 Std.) – Erstgespräch Förderung & Machbarkeit': 'Erstberatung vor Ort zur energetischen Bewertung des Gebäudes sowie Aufzeigen von Fördermöglichkeiten (BAFA, KfW BEG). Besprechung der Sanierungsmöglichkeiten und nächsten Schritte.',
+  'Telefonische Beratung – Förderung & Machbarkeit (je angefangene Stunde)': 'Telefonische Beratung zur Klärung von Förderfragen und Machbarkeit energetischer Sanierungsmaßnahmen.',
+  'Vor-Ort-Beratung': 'Energetische Beratung vor Ort am Objekt inkl. Begehung und Auswertung.',
+  'Energieberatung vor Ort (BAFA EBW) inkl. individuellem Sanierungsfahrplan (iSFP)': 'Geförderte Energieberatung für Wohngebäude (BAFA EBW) gemäß Richtlinie Bundesförderung Energieberatung für Wohngebäude. Erstellung eines individuellen Sanierungsfahrplans (iSFP) mit Maßnahmenempfehlungen und Fördermöglichkeiten.',
+  'Honorar nach Aufwand (Stundensatz)': 'Beratungsleistung nach tatsächlichem Zeitaufwand gemäß vereinbartem Stundensatz.',
+  'Tagessatz Energieberatung (8 Std.)': 'Energieberatung pauschal für einen Beratungstag (8 Stunden) am Objekt oder im Büro.',
+  'iSFP – 1-2 Familienhaus': 'Erstellung eines individuellen Sanierungsfahrplans (iSFP) für ein Ein- oder Zweifamilienhaus gemäß BAFA-Richtlinie Energieberatung für Wohngebäude (EBW). Inkl. Bestandsaufnahme, Maßnahmenempfehlungen und Fördermittelberatung.',
+  'iSFP – Mehrfamilienhaus': 'Erstellung eines individuellen Sanierungsfahrplans (iSFP) für ein Mehrfamilienhaus (ab 3 Wohneinheiten) gemäß BAFA-Richtlinie Energieberatung für Wohngebäude (EBW). Inkl. Bestandsaufnahme, Maßnahmenempfehlungen und Fördermittelberatung.',
+  'Energiebedarfsausweis (GEG)': 'Erstellung eines Energiebedarfsausweises gemäß Gebäudeenergiegesetz (GEG 2023) auf Basis einer Berechnung des Energiebedarfs des Gebäudes.',
+  'Energieverbrauchsausweis (GEG)': 'Erstellung eines Energieverbrauchsausweises gemäß Gebäudeenergiegesetz (GEG 2023) auf Basis der gemessenen Verbrauchsdaten.',
+  'Heizlastberechnung (DIN EN 12831-1)': 'Raumweise Heizlastberechnung gemäß DIN EN 12831-1 als Grundlage für die Auslegung der Heizungsanlage und den hydraulischen Abgleich.',
+  'Hydraulischer Abgleich (Verfahren B)': 'Hydraulischer Abgleich der Heizungsanlage nach Verfahren B gemäß VDI 2073 und GEG § 60a. Inkl. Berechnung der Einstellwerte für alle Heizkörper.',
+  'Heizlast & Hydraul. Abgleich (Kombi)': 'Heizlastberechnung gem. DIN EN 12831-1 und hydraulischer Abgleich nach Verfahren B gem. VDI 2073 / GEG § 60a als Kombileistung. Inkl. Einstellprotokoll für alle Heizkörper.',
+  'Sommerlicher Wärmeschutz (DIN 4108-2)': 'Nachweis und Beurteilung des sommerlichen Wärmeschutzes gemäß DIN 4108-2. Bewertung der Sonneneintragskennwerte und Empfehlungen zur Verbesserung des Wohnkomforts im Sommer.',
+  'Wärmebrückennachweis (DIN EN ISO 10211)': 'Berechnung und Nachweis von Wärmebrücken gemäß DIN EN ISO 10211 / DIN 4108 Beiblatt 2. Bewertung der Wärmebrückenwirkung und Empfehlung von Minimierungsmaßnahmen.',
+  'Schimmelgutachten / Feuchteschutz (DIN 4108-3)': 'Gutachterliche Beurteilung der Schimmel- und Feuchteschäden sowie Nachweis des Feuchteschutzes gemäß DIN 4108-3. Inkl. Ursachenanalyse und Sanierungsempfehlung.',
+  'Lüftungskonzept (DIN 1946-6)': 'Erstellung eines Lüftungskonzeptes gemäß DIN 1946-6 zur Sicherstellung eines hygienischen Mindestluftwechsels. Notwendigkeitsnachweis und Lüftungsempfehlung.',
+  'Luftdichtheitskonzept / Blower-Door': 'Erstellung eines Luftdichtheitskonzeptes und Vorbereitung der Blower-Door-Messung gemäß DIN EN ISO 9972. Prüfung der Gebäudehülle auf Luftdichtheit.',
+  'Gebäudebilanzierung Neubau (KfW)': 'Energetische Gebäudebilanzierung für Neubau gemäß GEG 2023 / KfW BEG WG. Nachweis der Anforderungen an den Jahres-Primärenergiebedarf und die Wärmedämmung.',
+  'Thermografie-Aufnahme (DIN EN 13187)': 'Thermografische Untersuchung der Gebäudehülle gemäß DIN EN 13187. Erkennung von Wärmebrücken, Undichtigkeiten und Schwachstellen. Inkl. Auswertungsbericht mit Bildmaterial.',
+  'BAFA TPB – Techn. Projektbeschreibung': 'Erstellung der Technischen Projektbeschreibung (TPB) für die Antragstellung bei der BAFA im Rahmen der Bundesförderung für effiziente Gebäude – Einzelmaßnahmen (BEG EM).',
+  'BAFA TPN – Techn. Projektnachweis': 'Erstellung des Technischen Projektnachweises (TPN) als Verwendungsnachweis bei der BAFA im Rahmen der Bundesförderung für effiziente Gebäude – Einzelmaßnahmen (BEG EM).',
+  'KfW BzA – Bestätigung zum Antrag': 'Ausstellung der Bestätigung zum Antrag (BzA) als zugelassener Energieeffizienz-Experte (EEE) im Rahmen der KfW Bundesförderung für effiziente Gebäude (BEG WG / BEG NWG).',
+  'KfW BnD – Bestätigung nach Durchführung': 'Ausstellung der Bestätigung nach Durchführung (BnD) als zugelassener Energieeffizienz-Experte (EEE) im Rahmen der KfW Bundesförderung für effiziente Gebäude (BEG WG / BEG NWG).',
+  'Fachplanung & Baubegleitung (KfW BEG)': 'Fachplanung und Baubegleitung gemäß KfW-Anforderungen im Rahmen der Bundesförderung für effiziente Gebäude (BEG). Inkl. Überwachung der Ausführungsqualität und Dokumentation.',
+  'Baubegleitung – Einzeltermin vor Ort': 'Baubegleitung – Einzeltermin vor Ort gemäß KfW BEG Anforderungen. Kontrolle der fachgerechten Ausführung der Sanierungsmaßnahmen und Dokumentation.',
+  'Anfahrtspauschale (über 30 km)': 'Anfahrtspauschale für Fahrten über 30 km Entfernung (je Richtung) zum Objekt.',
+};
+
+function onLS(id,v){
+  const pd = document.getElementById('pd-'+id);
+  if(!pd) return;
+  if(v && v!=='– Auswählen –' && v!=='– Eigene Beschreibung –'){
+    // Standardtext aus Lookup laden, dann bearbeitbar
+    const leistObj = S_leistungen.find(l=>l.name===v);
+    pd.value = leistObj ? leistObj.text||v : (LEIST_TEXT[v]||v);
+    pd.focus();
+  } else if(v==='– Eigene Beschreibung –'){
+    pd.value = '';
+    pd.focus();
+  }
+  cSum();
+}
 
 function getPOS(){
   return Array.from($('pos-body').children).map(tr=>{
@@ -1564,8 +1630,11 @@ function renderRechnungen(q='',sf=''){
           <option>Überfällig</option>
           <option>Mahnung 1</option>
           <option>Mahnung 2</option>
+          <option>Letzte Mahnung</option>
           <option>Storniert</option>
         </select>
+        <button class="btn btn-out btn-xs" onclick="openMahnung('${r.id}')" title="Mahnung erstellen" style="color:var(--orange);border-color:#FED7AA">⚠️</button>
+        <button class="btn btn-out btn-xs" onclick="stornoRechnung('${r.id}')" title="Stornieren" style="color:var(--red);border-color:#FEE2E2">⊘</button>
         <button class="btn btn-ghost btn-ico btn-xs" onclick="delDoc('rechnungen','${r.id}',S.rechnungen)" title="Löschen">🗑</button>
       </div></td></tr>`}).join('')
   :'<tr><td colspan="8"><div class="empty"><div class="ei">🧾</div><div class="et">Keine Rechnungen</div></div></td></tr>';
@@ -1651,9 +1720,15 @@ function prevDoc(type,id){
       
       <!-- TITEL -->
       <div class="dtw">
-        <div class="dtype">${isA?'ANGEBOT':'RECHNUNG'}</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="dtype">${isA?'ANGEBOT':d.storno?'STORNORECHNUNG':d.mahnung?'MAHNUNG':'RECHNUNG'}</div>
+          ${d.storno?'<div style="border:3px solid #DC2626;color:#DC2626;font-weight:900;font-size:14px;padding:3px 10px;border-radius:5px;letter-spacing:2px;transform:rotate(-5deg)">STORNIERT</div>':''}
+          ${d.mahnung?`<div style="border:3px solid #EA580C;color:#EA580C;font-weight:900;font-size:13px;padding:3px 10px;border-radius:5px;letter-spacing:1px">${d.mahnung}</div>`:''}
+        </div>
         <div class="dglt"></div>
         ${d.betreff?`<div class="dbet">Betreff: ${d.betreff}</div>`:''}
+        ${d.storno?`<div style="padding:6px 12px;background:#FEE2E2;border-radius:5px;font-size:11px;color:#991B1B;margin-top:6px">Bezug: Stornorechnung zu Rechnung Nr. ${d.stornoRef||''}</div>`:''}
+        ${d.mahnung?`<div style="padding:6px 12px;background:#FFF7ED;border-radius:5px;font-size:11px;color:#9A3412;margin-top:6px">Zahlungserinnerung: Bitte begleichen Sie den offenen Betrag umgehend.</div>`:''}
       </div>
       
       <!-- ANSCHREIBEN -->
@@ -2076,9 +2151,15 @@ async function loadKundenDoc(typ, docId){
         </table></div>
       </div>
       <div class="dtw">
-        <div class="dtype">${isA?'ANGEBOT':'RECHNUNG'}</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div class="dtype">${isA?'ANGEBOT':d.storno?'STORNORECHNUNG':d.mahnung?'MAHNUNG':'RECHNUNG'}</div>
+          ${d.storno?'<div style="border:3px solid #DC2626;color:#DC2626;font-weight:900;font-size:14px;padding:3px 10px;border-radius:5px;letter-spacing:2px;transform:rotate(-5deg)">STORNIERT</div>':''}
+          ${d.mahnung?`<div style="border:3px solid #EA580C;color:#EA580C;font-weight:900;font-size:13px;padding:3px 10px;border-radius:5px;letter-spacing:1px">${d.mahnung}</div>`:''}
+        </div>
         <div class="dglt"></div>
         ${d.betreff?`<div class="dbet">Betreff: ${d.betreff}</div>`:''}
+        ${d.storno?`<div style="padding:6px 12px;background:#FEE2E2;border-radius:5px;font-size:11px;color:#991B1B;margin-top:6px">Bezug: Stornorechnung zu Rechnung Nr. ${d.stornoRef||''}</div>`:''}
+        ${d.mahnung?`<div style="padding:6px 12px;background:#FFF7ED;border-radius:5px;font-size:11px;color:#9A3412;margin-top:6px">Zahlungserinnerung: Bitte begleichen Sie den offenen Betrag umgehend.</div>`:''}
       </div>
       ${d.ansch?`<div class="dansch">${d.ansch}</div>`:''}
       <div class="dtw">
@@ -2380,6 +2461,262 @@ function doEuerExport(){
   URL.revokeObjectURL(url);
   cm('m-euer');
   toast('EUeR exportiert!','s');
+}
+
+// ── LEISTUNGEN VERWALTEN ────────────────────────
+// Leistungen aus LEIST + LEIST_TEXT in editierbare Liste laden
+let S_leistungen = [];
+
+function initLeistungen(){
+  // Beim ersten Mal aus LEIST + LEIST_TEXT laden
+  const saved = localStorage.getItem('schaumburg_leistungen');
+  if(saved){
+    try{ S_leistungen = JSON.parse(saved); }catch(e){}
+  }
+  if(!S_leistungen.length){
+    // Standard-Leistungen aus LEIST laden
+    S_leistungen = LEIST
+      .filter(l => l !== '– Auswählen –' && l !== '– Eigene Beschreibung –')
+      .map(l => ({ name: l, text: LEIST_TEXT[l] || '' }));
+  }
+  renderLeistungen();
+  updateLeistDropdowns();
+}
+
+function renderLeistungen(){
+  const tbody = document.getElementById('leistungen-body');
+  if(!tbody) return;
+  if(!S_leistungen.length){
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty"><div class="ei">📝</div><div class="et">Keine Leistungen</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = S_leistungen.map((l,i) => `<tr>
+    <td style="font-weight:600;min-width:200px">${l.name}</td>
+    <td style="font-size:11.5px;color:var(--g4);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.text||'–'}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn btn-out btn-xs" onclick="editLeistung(${i})">✏️</button>
+      <button class="btn btn-ghost btn-ico btn-xs" onclick="delLeistung(${i})">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function openLeistung(i){
+  const idx = (i !== undefined) ? i : -1;
+  document.getElementById('m-l-title').textContent = idx >= 0 ? 'Leistung bearbeiten' : 'Neue Leistung';
+  document.getElementById('l-idx').value = idx;
+  if(idx >= 0 && S_leistungen[idx]){
+    document.getElementById('l-name').value = S_leistungen[idx].name || '';
+    document.getElementById('l-text').value = S_leistungen[idx].text || '';
+  } else {
+    document.getElementById('l-name').value = '';
+    document.getElementById('l-text').value = '';
+  }
+  om('m-leistung');
+}
+
+function editLeistung(i){ openLeistung(i); }
+
+function saveLeistung(){
+  const idx = parseInt(document.getElementById('l-idx').value);
+  const name = document.getElementById('l-name').value.trim();
+  const text = document.getElementById('l-text').value.trim();
+  if(!name){ toast('Bitte Bezeichnung eingeben!','e'); return; }
+  
+  if(idx >= 0){
+    S_leistungen[idx] = { name, text };
+    toast('Leistung aktualisiert!','s');
+  } else {
+    S_leistungen.push({ name, text });
+    toast('Leistung hinzugefügt!','s');
+  }
+  
+  saveLeistungenLocal();
+  cm('m-leistung');
+  renderLeistungen();
+  updateLeistDropdowns();
+}
+
+function delLeistung(i){
+  if(!confirm('Leistung wirklich löschen?')) return;
+  S_leistungen.splice(i, 1);
+  saveLeistungenLocal();
+  renderLeistungen();
+  updateLeistDropdowns();
+  toast('Gelöscht.','e');
+}
+
+function saveLeistungenLocal(){
+  try{ localStorage.setItem('schaumburg_leistungen', JSON.stringify(S_leistungen)); }catch(e){}
+}
+
+function updateLeistDropdowns(){
+  // Alle Dropdown-Selects in Positionen aktualisieren
+  document.querySelectorAll('#pos-body select').forEach(sel => {
+    const curVal = sel.value;
+    sel.innerHTML = '<option>– Auswählen –</option>' +
+      S_leistungen.map(l => `<option${curVal===l.name?' selected':''}>${l.name}</option>`).join('') +
+      '<option>– Eigene Beschreibung –</option>';
+  });
+}
+
+// ── STORNO & MAHNUNG ────────────────────────────
+
+async function stornoRechnung(id){
+  const r = S.rechnungen.find(x=>x.id===id);
+  if(!r) return;
+  if(!confirm('Stornorechnung zu ' + r.nr + ' erstellen?')) return;
+  
+  const stornoNr = 'STORNO-' + r.nr;
+  const stornoData = {
+    nr: stornoNr,
+    datum: today(),
+    datum2: today(),
+    faellig: today(),
+    kundeId: r.kundeId,
+    kundeName: r.kundeName,
+    kundeData: r.kundeData||{},
+    betreff: 'Stornorechnung zu ' + r.nr + (r.betreff?' – '+r.betreff:''),
+    ansch: 'Sehr geehrte Damen und Herren,\n\nhiermit stornieren wir unsere Rechnung Nr. ' + r.nr + ' vom ' + fmtD(r.datum) + ' in voller Höhe.\n\nBitte bewahren Sie dieses Dokument als Nachweis auf.',
+    hinw: r.hinw||'',
+    pos: (r.pos||[]).map(p=>({...p, ep:-(p.ep||0), summe:-(p.summe||0)})),
+    netto: -(r.netto||0),
+    mwstB: -(r.mwstB||0),
+    mwst: r.mwst||false,
+    gesamt: -(r.gesamt||0),
+    status: 'Bezahlt',
+    bezahltAm: today(),
+    storno: true,
+    stornoRef: r.nr,
+    ts: Date.now()
+  };
+  
+  try{
+    // Original als storniert markieren
+    await db.collection('rechnungen').doc(id).update({status:'Storniert', storniertAm:today()});
+    const i = S.rechnungen.findIndex(x=>x.id===id);
+    if(i>=0) S.rechnungen[i].status = 'Storniert';
+    
+    // Stornorechnung erstellen
+    const ref = await db.collection('rechnungen').add(stornoData);
+    S.rechnungen.unshift({id:ref.id,...stornoData});
+    
+    renderRechnungen();
+    renderDash();
+    updateBadges();
+    toast('Stornorechnung ' + stornoNr + ' erstellt!','s');
+    
+    // Direkt Vorschau öffnen
+    setTimeout(()=>prevDoc('rechnung', ref.id), 500);
+  }catch(e){ toast('Fehler: '+e.message,'e'); }
+}
+
+// MAHNUNG MODAL
+function openMahnung(id){
+  const r = S.rechnungen.find(x=>x.id===id);
+  if(!r) return;
+  
+  const tage = r.faellig ? Math.floor((Date.now()-new Date(r.faellig))/(1000*60*60*24)) : 0;
+  let stufe = 'Mahnung 1';
+  let gebuehr = 0;
+  let text = '';
+  
+  if(r.status === 'Mahnung 1'){
+    stufe = 'Mahnung 2';
+    gebuehr = 5;
+    text = 'Sehr geehrte Damen und Herren,\n\nleider mussten wir feststellen, dass unsere Rechnung Nr. ' + r.nr + ' vom ' + fmtD(r.datum) + ' über ' + euro(r.gesamt) + ' trotz unserer ersten Zahlungserinnerung noch nicht beglichen wurde.\n\nWir bitten Sie dringend, den Betrag zzgl. Mahngebühr innerhalb von 7 Tagen zu überweisen.\n\nFalls Sie bereits gezahlt haben, betrachten Sie dieses Schreiben als gegenstandslos.';
+  } else if(r.status === 'Mahnung 2'){
+    stufe = 'Letzte Mahnung';
+    gebuehr = 10;
+    text = 'Sehr geehrte Damen und Herren,\n\nwir machen Sie letztmalig auf die ausstehende Zahlung unserer Rechnung Nr. ' + r.nr + ' aufmerksam. Trotz zweier Mahnungen ist der Betrag noch nicht eingegangen.\n\nSollte die Zahlung nicht innerhalb von 5 Tagen erfolgen, sehen wir uns gezwungen, einen Inkasso-Dienstleister einzuschalten. Die dadurch entstehenden Kosten gehen zu Ihren Lasten.';
+  } else {
+    stufe = 'Mahnung 1';
+    gebuehr = 0;
+    text = 'Sehr geehrte Damen und Herren,\n\nwir erlauben uns, Sie freundlich daran zu erinnern, dass unsere Rechnung Nr. ' + r.nr + ' vom ' + fmtD(r.datum) + ' über ' + euro(r.gesamt) + ' mit Fälligkeit ' + fmtD(r.faellig) + ' noch offen ist.\n\nBitte überweisen Sie den Betrag innerhalb von 7 Tagen.\n\nFalls Sie bereits gezahlt haben, betrachten Sie dieses Schreiben als gegenstandslos.';
+  }
+  
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,31,28,.6);backdrop-filter:blur(5px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:28px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #EEF2F1">
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#0D3B36">⚠️ ${stufe} erstellen</div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#F7F9F8;border:none;border-radius:7px;width:28px;height:28px;cursor:pointer">✕</button>
+      </div>
+      <div style="padding:10px 14px;background:#FFF7ED;border-radius:8px;border:1px solid #FED7AA;margin-bottom:16px;font-size:12.5px;color:#9A3412">
+        <b>Rechnung:</b> ${r.nr} · <b>Betrag:</b> ${euro(r.gesamt)} · <b>Fällig:</b> ${fmtD(r.faellig)} · <b>Überfällig seit:</b> ${tage} Tagen
+        ${gebuehr > 0 ? '<br><b>Mahngebühr:</b> ' + euro(gebuehr) : ''}
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Mahntext</label>
+        <textarea id="mahn-text" rows="8" style="width:100%;padding:9px 12px;border:1.5px solid #EEF2F1;border-radius:8px;font-size:12.5px;font-family:'DM Sans',sans-serif;resize:vertical">${text}</textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="doMahnung('${id}','${stufe}',${gebuehr})" style="flex:1;padding:12px;background:linear-gradient(135deg,#EA580C,#C2410C);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif">
+          ⚠️ ${stufe} erstellen & anzeigen
+        </button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="padding:12px 18px;background:transparent;border:1.5px solid #EEF2F1;border-radius:10px;color:#0D3B36;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif">
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function doMahnung(id, stufe, gebuehr){
+  const r = S.rechnungen.find(x=>x.id===id);
+  if(!r) return;
+  const mahnText = document.getElementById('mahn-text').value;
+  
+  const mahnNr = stufe.replace(' ','-') + '-' + r.nr;
+  const gesamtMitGebuehr = (r.gesamt||0) + gebuehr;
+  
+  const mahnData = {
+    nr: mahnNr,
+    datum: today(),
+    datum2: plusD(7),
+    faellig: plusD(7),
+    kundeId: r.kundeId,
+    kundeName: r.kundeName,
+    kundeData: r.kundeData||{},
+    betreff: stufe + ' zu Rechnung ' + r.nr + (r.betreff?' – '+r.betreff:''),
+    ansch: mahnText,
+    hinw: 'Bitte überweisen Sie den Gesamtbetrag innerhalb der gesetzten Frist. Bei weiterer Nichtzahlung behalten wir uns rechtliche Schritte vor.',
+    pos: [
+      ...( r.pos||[] ),
+      ...(gebuehr > 0 ? [{desc: 'Mahngebühr ' + stufe, menge:1, einheit:'Pauschal', ep:gebuehr, summe:gebuehr}] : [])
+    ],
+    netto: gesamtMitGebuehr,
+    mwstB: 0,
+    mwst: false,
+    gesamt: gesamtMitGebuehr,
+    status: 'Offen',
+    mahnung: stufe,
+    mahnRef: r.nr,
+    ts: Date.now()
+  };
+  
+  try{
+    // Original Status updaten
+    await db.collection('rechnungen').doc(id).update({status:stufe});
+    const i = S.rechnungen.findIndex(x=>x.id===id);
+    if(i>=0) S.rechnungen[i].status = stufe;
+    
+    // Mahnung als neue Rechnung erstellen
+    const ref = await db.collection('rechnungen').add(mahnData);
+    S.rechnungen.unshift({id:ref.id,...mahnData});
+    
+    // Modal schließen
+    document.querySelector('div[style*="position:fixed"]')?.remove();
+    
+    renderRechnungen();
+    renderDash();
+    updateBadges();
+    toast(stufe + ' erstellt!','s');
+    
+    // Vorschau öffnen
+    setTimeout(()=>prevDoc('rechnung', ref.id), 500);
+  }catch(e){ toast('Fehler: '+e.message,'e'); }
 }
 
 </script>
