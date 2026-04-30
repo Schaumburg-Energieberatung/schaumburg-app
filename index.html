@@ -328,6 +328,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 @media print{
   /* Hintergrundfarben erzwingen */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  /* QR-Code beim Drucken linksbündig */
+  #prev-wrap [style*="justify-content:flex-start"] { justify-content: flex-start !important; text-align: left !important; }
+  #prev-wrap [id^="qr-"] { display: block !important; float: none !important; }
   /* Alles außer Vorschau verstecken */
   body > *:not(#m-prev) { display: none !important; }
   #m-prev { 
@@ -488,6 +491,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
     </div>
     <div class="sb-sec">
       <div class="sb-lbl">Tools</div>
+      <div class="ni" id="n-ausgaben" onclick="goto('ausgaben',this)"><span class="ni-ico">💸</span><span>Ausgaben</span></div>
       <div class="ni" id="n-foerder" onclick="goto('foerder',this)"><span class="ni-ico">🧮</span><span>Förderrechner</span></div>
       <div class="ni" id="n-settings" onclick="goto('settings',this)"><span class="ni-ico">⚙️</span><span>Einstellungen</span></div>
     </div>
@@ -508,6 +512,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
     <!-- DASHBOARD -->
     <div class="page on" id="page-dashboard">
       <div class="kpi-row" id="kpis"></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button class="btn btn-out" onclick="openExport()">📊 Steuerberater-Export</button>
+      </div>
       
       <!-- Monatsübersicht -->
       <div class="card" style="margin-bottom:16px">
@@ -571,6 +578,43 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
     <div class="page" id="page-kunden">
       <div style="margin-bottom:14px"><div class="srch"><input type="text" placeholder="Kunde suchen…" oninput="renderKunden(this.value)" style="max-width:300px"></div></div>
       <div class="kg" id="kg"></div>
+    </div>
+
+    <!-- AUSGABEN -->
+    <div class="page" id="page-ausgaben">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head">
+          <div class="card-title">💸 Betriebsausgaben</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-out btn-sm" onclick="openExportEUR()">📊 EÜR Export</button>
+            <button class="btn btn-gold btn-sm" onclick="openAusgabe()">＋ Ausgabe</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table class="tbl">
+            <thead><tr>
+              <th>Datum</th><th>Kategorie</th><th>Beschreibung</th>
+              <th>Betrag (€)</th><th>Beleg</th><th>Aktionen</th>
+            </tr></thead>
+            <tbody id="ausgaben-body"></tbody>
+          </table>
+        </div>
+        <div style="padding:14px 18px;border-top:1px solid var(--g2);display:flex;justify-content:flex-end">
+          <div class="sumbox" style="min-width:220px">
+            <div class="sr"><span class="sl">Ausgaben gesamt:</span><span class="sv" id="aus-sum">0,00 €</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- KATEGORIEN HINWEIS -->
+      <div class="card card-p" style="background:var(--goldll);border:1.5px solid rgba(201,169,97,.3)">
+        <div style="font-size:12px;color:var(--dk);line-height:1.8">
+          <b>Typische Betriebsausgaben als Energieberater:</b><br>
+          Fahrtkosten (0,30€/km) · Büromaterial · Software & Apps · Fortbildungen · 
+          Fachliteratur · Telefon & Internet (anteilig) · Arbeitszimmer (anteilig) · 
+          Berufshaftpflicht · Messtechnik & Geräte · Visitenkarten & Marketing
+        </div>
+      </div>
     </div>
 
     <!-- FÖRDERRECHNER -->
@@ -793,6 +837,145 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   </div>
 </div>
 
+
+<!-- STEUERBERATER EXPORT MODAL -->
+<div class="ov" id="m-export">
+  <div class="modal" style="width:480px">
+    <div class="mh"><div class="mt">📊 Steuerberater-Export</div><button class="mc" onclick="cm('m-export')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--g4);margin-bottom:16px">Erstellt eine Excel-Datei mit allen Rechnungen für deinen Steuerberater (EÜR-konform).</p>
+      
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab on" id="ex-tab-q" onclick="switchExTab('q')">Quartal</button>
+        <button class="tab" id="ex-tab-j" onclick="switchExTab('j')">Jahr</button>
+        <button class="tab" id="ex-tab-a" onclick="switchExTab('a')">Alles</button>
+      </div>
+      
+      <div id="ex-q" style="display:block">
+        <div class="fg">
+          <div class="fld"><label>Jahr</label>
+            <select id="ex-q-year" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+              <option>2026</option><option>2025</option><option>2024</option>
+            </select>
+          </div>
+          <div class="fld"><label>Quartal</label>
+            <select id="ex-q-q" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+              <option value="1">Q1 (Jan–Mär)</option>
+              <option value="2">Q2 (Apr–Jun)</option>
+              <option value="3">Q3 (Jul–Sep)</option>
+              <option value="4">Q4 (Okt–Dez)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div id="ex-j" style="display:none">
+        <div class="fld"><label>Jahr</label>
+          <select id="ex-j-year" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;width:100%">
+            <option>2026</option><option>2025</option><option>2024</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="ex-a" style="display:none">
+        <div style="padding:12px;background:var(--goldll);border-radius:var(--r);font-size:12.5px;color:var(--dk)">
+          📋 Alle Rechnungen werden exportiert.
+        </div>
+      </div>
+      
+      <div style="margin-top:16px;padding:12px;background:var(--g1);border-radius:var(--r);font-size:11.5px;color:var(--g4);line-height:1.7">
+        <b style="color:var(--dk)">Enthaltene Daten:</b><br>
+        Rechnungsnummer · Datum · Fälligkeitsdatum · Kunde · Beschreibung · Nettobetrag · Status · Bezahldatum
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cm('m-export')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="doExport()">📥 CSV herunterladen</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- AUSGABE MODAL -->
+<div class="ov" id="m-ausgabe">
+  <div class="modal" style="width:500px">
+    <div class="mh"><div class="mt" id="m-aus-title">💸 Neue Ausgabe</div><button class="mc" onclick="cm('m-ausgabe')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="aus-id">
+      <div class="fg">
+        <div class="fld"><label>Datum *</label><input type="date" id="aus-datum"></div>
+        <div class="fld"><label>Betrag (€) *</label><input type="number" id="aus-betrag" placeholder="0.00" step="0.01" min="0"></div>
+        <div class="fld fc"><label>Kategorie</label>
+          <select id="aus-kat" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
+            <option>Fahrtkosten</option>
+            <option>Büromaterial</option>
+            <option>Software & Apps</option>
+            <option>Fortbildung & Seminare</option>
+            <option>Fachliteratur & Normen</option>
+            <option>Telefon & Internet</option>
+            <option>Arbeitszimmer</option>
+            <option>Berufshaftpflicht</option>
+            <option>Messtechnik & Geräte</option>
+            <option>Marketing & Werbung</option>
+            <option>Reisekosten</option>
+            <option>Bewirtung (70% absetzbar)</option>
+            <option>Sonstiges</option>
+          </select>
+        </div>
+        <div class="fld fc"><label>Beschreibung *</label><input id="aus-desc" placeholder="z.B. Fahrt zum Kunden Muster, 45km"></div>
+        <div class="fld"><label>Belegnummer</label><input id="aus-beleg" placeholder="Beleg-001"></div>
+        <div class="fld"><label>Zahlungsart</label>
+          <select id="aus-zart" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
+            <option>Bar</option><option>EC-Karte</option><option>Überweisung</option><option>PayPal</option><option>Kreditkarte</option>
+          </select>
+        </div>
+        <div class="fld fc"><label>Notiz</label><textarea id="aus-notiz" rows="2" placeholder="Optional..."></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cm('m-ausgabe')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveAusgabe()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- EÜR EXPORT MODAL -->
+<div class="ov" id="m-euer">
+  <div class="modal" style="width:480px">
+    <div class="mh"><div class="mt">📊 EÜR Export für Steuerberater</div><button class="mc" onclick="cm('m-euer')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:12.5px;color:var(--g4);margin-bottom:16px">Erstellt eine vollständige Einnahmen-Überschuss-Rechnung (EÜR) als CSV-Datei.</p>
+      <div class="fld" style="margin-bottom:14px">
+        <label>Zeitraum</label>
+        <select id="euer-period" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
+          <option value="2026">Jahr 2026</option>
+          <option value="2025">Jahr 2025</option>
+          <option value="q1-2026">Q1 2026 (Jan–Mär)</option>
+          <option value="q2-2026">Q2 2026 (Apr–Jun)</option>
+          <option value="q3-2026">Q3 2026 (Jul–Sep)</option>
+          <option value="q4-2026">Q4 2026 (Okt–Dez)</option>
+          <option value="q1-2025">Q1 2025</option>
+          <option value="q2-2025">Q2 2025</option>
+          <option value="q3-2025">Q3 2025</option>
+          <option value="q4-2025">Q4 2025</option>
+        </select>
+      </div>
+      <div style="padding:12px;background:var(--g1);border-radius:var(--r);font-size:11.5px;color:var(--g4);line-height:1.8">
+        <b style="color:var(--dk)">Datei enthält:</b><br>
+        ✅ Alle Einnahmen (bezahlte Rechnungen)<br>
+        ✅ Alle Betriebsausgaben<br>
+        ✅ Gewinn/Verlust Übersicht<br>
+        ✅ §19 UStG Hinweis (Kleinunternehmer)<br>
+        ✅ Geeignet für DATEV / Steuerberater
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cm('m-euer')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="doEuerExport()">📥 EÜR herunterladen</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -846,8 +1029,8 @@ const toast = (m,t='') => {const el=$('toast');el.className='toast show '+(t||''
 const om = id => $(id).classList.add('open');
 const cm = id => $(id).classList.remove('open');
 
-// CLICK OUTSIDE MODAL
-document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+// CLICK OUTSIDE MODAL - DEAKTIVIERT
+// Modals schließen NUR über Buttons (Abbrechen/X)
 
 // LOGIN
 function doLogin(){
@@ -916,6 +1099,7 @@ async function loadAll(){
     S.angebote=as.docs.map(d=>({id:d.id,...d.data()}));
     S.rechnungen=rs.docs.map(d=>({id:d.id,...d.data()}));
     renderAll();
+    loadAusgaben();
   }catch(e){console.error('load:',e);toast('Fehler beim Laden: '+e.message,'e')}
 }
 
@@ -927,12 +1111,13 @@ function goto(page,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   $('page-'+page).classList.add('on');
   if(el)el.classList.add('on');
-  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',foerder:'Förderrechner',settings:'Einstellungen'};
+  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',ausgaben:'Betriebsausgaben',foerder:'Förderrechner',settings:'Einstellungen'};
   $('tb-title').textContent=titles[page]||page;
   const acts=$('tb-acts');
   if(page==='angebote') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;angebot&quot;)'>+ Angebot</button>";
   else if(page==='rechnungen') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;rechnung&quot;)'>+ Rechnung</button>";
   else if(page==='kunden') acts.innerHTML="<button class='btn btn-gold' onclick='openKunde()'>+ Kunde</button>";
+  else if(page==='ausgaben') acts.innerHTML="<button class='btn btn-gold' onclick='openAusgabe()'>+ Ausgabe</button>";
   else acts.innerHTML='';
 }
 
@@ -1512,12 +1697,12 @@ function prevDoc(type,id){
       <!-- QR CODE - direkt über Fußzeile, linksbündig -->
       ${!isA && C.iban ? `
       <div style="padding:10px 22px 8px;border-top:1px solid #EEF2F1;background:#F7F9F8">
-        <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:12px">
-          <div id="qr-${d.id}" style="width:70px;height:70px;flex-shrink:0;background:white;padding:2px"></div>
-          <div style="flex:0 1 auto">
-            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">Zahlung per QR-Code (GiroCode)</div>
-            <div style="font-size:9px;color:#444;line-height:1.65">Scannen Sie mit Ihrer Banking-App.<br>Betrag, IBAN und Verwendungszweck werden automatisch übernommen.</div>
-            <div style="font-size:8.5px;color:#8FA8A4;margin-top:3px">Betrag: ${euro(d.gesamt||0)} · Verwendungszweck: ${d.nr}</div>
+        <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:18px">
+          <div id="qr-${d.id}" style="width:58px;height:58px;flex-shrink:0;background:white;padding:2px"></div>
+          <div style="flex:0 1 auto;padding-left:4px">
+            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Zahlung per QR-Code (GiroCode)</div>
+            <div style="font-size:9px;color:#444;line-height:1.8">Scannen Sie mit Ihrer Banking-App.<br>Betrag, IBAN und Verwendungszweck werden automatisch übernommen.</div>
+            <div style="font-size:8.5px;color:#8FA8A4;margin-top:5px">Betrag: ${euro(d.gesamt||0)} · Verwendungszweck: ${d.nr}</div>
           </div>
         </div>
       </div>` : ''}
@@ -1567,8 +1752,8 @@ function prevDoc(type,id){
         try{
           new QRCode(qrEl, {
             text: epc,
-            width: 80,
-            height: 80,
+            width: 58,
+            height: 58,
             colorDark: '#0D3B36',
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.M
@@ -1632,7 +1817,7 @@ function shareLink(){
     </div>
   `;
   document.body.appendChild(modal);
-  modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+  // Modal schließt nur über Buttons
 }
 
 function copyToClipboard(text){
@@ -1714,7 +1899,7 @@ ${C.email||'info@schaumburg-energieberatung.de'}</textarea>
     </div>
   `;
   document.body.appendChild(modal);
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove()});
+  // Modal schließt nur über Buttons
 }
 
 async function doSendMail(){
@@ -1995,6 +2180,16 @@ async function saveSettings(){
     toast('Fehler: '+e.message,'e');
     console.error(e);
   }
+}
+
+async function delAusgabe(id){
+  if(!confirm('Ausgabe wirklich löschen?')) return;
+  try{
+    await db.collection('ausgaben').doc(id).delete();
+    S_ausgaben = S_ausgaben.filter(x=>x.id!==id);
+    renderAusgaben();
+    toast('Ausgabe gelöscht.','e');
+  }catch(e){ toast('Fehler: '+e.message,'e'); }
 }
 
 </script>
