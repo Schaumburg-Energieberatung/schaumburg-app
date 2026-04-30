@@ -488,6 +488,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
     <div class="sb-sec">
       <div class="sb-lbl">Verwaltung</div>
       <div class="ni" id="n-kunden" onclick="goto('kunden',this)"><span class="ni-ico">👥</span><span>Kunden</span></div>
+      <div class="ni" id="n-crm" onclick="goto('crm',this)"><span class="ni-ico">🎯</span><span>CRM</span><span class="nb" id="b-crm" style="display:none">0</span></div>
     </div>
     <div class="sb-sec">
       <div class="sb-lbl">Tools</div>
@@ -579,6 +580,55 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
     <div class="page" id="page-kunden">
       <div style="margin-bottom:14px"><div class="srch"><input type="text" placeholder="Kunde suchen…" oninput="renderKunden(this.value)" style="max-width:300px"></div></div>
       <div class="kg" id="kg"></div>
+    </div>
+
+    <!-- CRM -->
+    <div class="page" id="page-crm">
+      
+      <!-- WIEDERVORLAGEN OBEN -->
+      <div class="card" style="margin-bottom:14px;border-left:4px solid var(--orange)">
+        <div class="card-head">
+          <div class="card-title">🔔 Wiedervorlagen & Aufgaben</div>
+          <button class="btn btn-gold btn-sm" onclick="openAktivitaet(null,'wiedervorlage')">＋ Aufgabe</button>
+        </div>
+        <div id="wv-list" style="padding:8px 0"></div>
+      </div>
+
+      <!-- AKTIVITÄTEN TIMELINE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        
+        <!-- LETZTE AKTIVITÄTEN -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">📋 Letzte Aktivitäten</div>
+            <button class="btn btn-out btn-sm" onclick="openAktivitaet()">＋ Neu</button>
+          </div>
+          <div id="akt-list" style="max-height:400px;overflow-y:auto"></div>
+        </div>
+
+        <!-- KUNDEN PIPELINE -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">🎯 Kunden Pipeline</div></div>
+          <div style="padding:12px">
+            <div style="margin-bottom:12px">
+              <div style="font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🟡 Interessenten</div>
+              <div id="pipe-interesse" style="min-height:40px;background:var(--g1);border-radius:8px;padding:8px"></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🔵 Angebot gestellt</div>
+              <div id="pipe-angebot" style="min-height:40px;background:#EFF6FF;border-radius:8px;padding:8px"></div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🟢 Auftrag</div>
+              <div id="pipe-auftrag" style="min-height:40px;background:#F0FDF4;border-radius:8px;padding:8px"></div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">✅ Abgeschlossen</div>
+              <div id="pipe-done" style="min-height:40px;background:var(--g1);border-radius:8px;padding:8px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- AUSGABEN -->
@@ -745,6 +795,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
         <div class="fld"><label>Telefon</label><input id="k-tel" placeholder="0170 …"></div>
         <div class="fld"><label>E-Mail</label><input id="k-mail" type="email" placeholder="max@example.de"></div>
         <div class="fld fc"><label>Objekt-Adresse</label><input id="k-obj" placeholder="falls abweichend"></div>
+        <div class="fld"><label>Steuer-ID / USt-IdNr.</label><input id="k-steuerid" placeholder="DE123456789 oder 12/345/67890"></div>
+        <div class="fld"><label>Geburtsdatum</label><input type="date" id="k-geburt"></div>
         <div class="fld fc"><label>Notizen</label><textarea id="k-note" rows="2"></textarea></div>
       </div>
     </div>
@@ -1025,6 +1077,50 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   </div>
 </div>
 
+
+<!-- AKTIVITÄT MODAL -->
+<div class="ov" id="m-aktivitaet">
+  <div class="modal" style="width:520px">
+    <div class="mh"><div class="mt" id="m-akt-title">📋 Neue Aktivität</div><button class="mc" onclick="cm('m-aktivitaet')">✕</button></div>
+    <div class="mb">
+      <input type="hidden" id="akt-id">
+      <div class="fg" style="gap:12px">
+        <div class="fld"><label>Datum</label><input type="date" id="akt-datum"></div>
+        <div class="fld"><label>Typ</label>
+          <select id="akt-typ" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
+            <option value="anruf">📞 Anruf</option>
+            <option value="email">✉️ E-Mail</option>
+            <option value="termin">📅 Termin vor Ort</option>
+            <option value="angebot">📋 Angebot gestellt</option>
+            <option value="auftrag">✅ Auftrag erhalten</option>
+            <option value="notiz">📝 Notiz</option>
+            <option value="wiedervorlage">🔔 Wiedervorlage</option>
+          </select>
+        </div>
+        <div class="fld fc"><label>Kunde</label>
+          <select id="akt-kunde" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
+            <option value="">– Kein Kunde –</option>
+          </select>
+        </div>
+        <div class="fld fc"><label>Betreff</label><input id="akt-betreff" placeholder="z.B. Erstgespräch Förderung, Angebot nachgefasst..."></div>
+        <div class="fld fc"><label>Notiz / Details</label><textarea id="akt-notiz" rows="4" placeholder="Was wurde besprochen? Nächste Schritte?"></textarea></div>
+        <div id="akt-wv-row" style="display:none">
+          <div class="fld fc"><label>🔔 Wiedervorlage am</label><input type="date" id="akt-wv-datum"></div>
+          <div class="fld fc"><label>Erinnerung</label><input id="akt-wv-text" placeholder="z.B. Kunde zurückrufen wegen Angebot"></div>
+        </div>
+        <div class="fld fc" style="flex-direction:row;align-items:center;gap:10px">
+          <input type="checkbox" id="akt-erledigt" style="width:16px;height:16px">
+          <label for="akt-erledigt" style="font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">Erledigt</label>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-out" onclick="cm('m-aktivitaet')">Abbrechen</button>
+      <button class="btn btn-gold" onclick="saveAktivitaet()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1150,6 +1246,8 @@ async function loadAll(){
     renderAll();
     loadAusgaben();
     initLeistungen();
+    loadAktivitaeten();
+    setTimeout(checkGeburtstage, 2000);
   }catch(e){console.error('load:',e);toast('Fehler beim Laden: '+e.message,'e')}
 }
 
@@ -1161,13 +1259,14 @@ function goto(page,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
   $('page-'+page).classList.add('on');
   if(el)el.classList.add('on');
-  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',ausgaben:'Betriebsausgaben',leistungen:'Leistungen & Texte',foerder:'Förderrechner',settings:'Einstellungen'};
+  const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',crm:'CRM & Aktivitäten',ausgaben:'Betriebsausgaben',leistungen:'Leistungen & Texte',foerder:'Förderrechner',settings:'Einstellungen'};
   $('tb-title').textContent=titles[page]||page;
   const acts=$('tb-acts');
   if(page==='angebote') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;angebot&quot;)'>+ Angebot</button>";
   else if(page==='rechnungen') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;rechnung&quot;)'>+ Rechnung</button>";
   else if(page==='kunden') acts.innerHTML="<button class='btn btn-gold' onclick='openKunde()'>+ Kunde</button>";
   else if(page==='ausgaben') acts.innerHTML="<button class='btn btn-gold' onclick='openAusgabe()'>+ Ausgabe</button>";
+  else if(page==='crm') acts.innerHTML="<button class='btn btn-out' onclick="openAktivitaet(null,'wiedervorlage')">🔔 Aufgabe</button><button class='btn btn-gold' style='margin-left:8px' onclick='openAktivitaet()'>+ Aktivität</button>";
   else if(page==='leistungen') acts.innerHTML="<button class='btn btn-gold' onclick='openLeistung()'>+ Leistung</button>";
   else acts.innerHTML='';
 }
@@ -1274,7 +1373,10 @@ function openKunde(k=null){
   $('k-firma').value=k?.firma||'';$('k-vn').value=k?.vn||'';$('k-nn').value=k?.nn||'';
   $('k-str').value=k?.str||'';$('k-plz').value=k?.plz||'';$('k-ort').value=k?.ort||'';
   $('k-tel').value=k?.tel||'';$('k-mail').value=k?.mail||'';
-  $('k-obj').value=k?.obj||'';$('k-note').value=k?.note||'';
+  $('k-obj').value=k?.obj||'';
+  if($('k-steuerid'))$('k-steuerid').value=k?.steuerid||'';
+  if($('k-geburt'))$('k-geburt').value=k?.geburt||'';
+  $('k-note').value=k?.note||'';
   om('m-kunde');
 }
 
@@ -1283,7 +1385,10 @@ async function saveKunde(){
   const anrede=$('k-anrede')?$('k-anrede').value:'';
   const data={nr:$('k-nr').value,anrede,firma:$('k-firma').value,vn:$('k-vn').value,nn:$('k-nn').value,
     str:$('k-str').value,plz:$('k-plz').value,ort:$('k-ort').value,
-    tel:$('k-tel').value,mail:$('k-mail').value,obj:$('k-obj').value,note:$('k-note').value,
+    tel:$('k-tel').value,mail:$('k-mail').value,obj:$('k-obj').value,
+    steuerid:$('k-steuerid')?$('k-steuerid').value:'',
+    geburt:$('k-geburt')?$('k-geburt').value:'',
+    note:$('k-note').value,
     name:(anrede?anrede+' ':'')+$('k-vn').value+' '+$('k-nn').value,ts:Date.now()};
   try{
     if(id){
@@ -1321,12 +1426,23 @@ function renderKunden(q=''){
         <div><div style="font-weight:700;font-size:14px">${k.anrede?k.anrede+' ':''}${k.vn} ${k.nn}</div>${k.firma?`<div style="font-size:11.5px;color:var(--g4)">${k.firma}</div>`:''}<div style="font-size:11.5px;color:var(--gold);font-weight:600;margin-top:2px">${k.nr}</div></div>
         <div style="display:flex;gap:4px"><button class="btn btn-ghost btn-ico" onclick='openKunde(${JSON.stringify(k)})' title="Bearbeiten">✏️</button><button class="btn btn-ghost btn-ico" onclick="delKunde('${k.id}')" title="Löschen">🗑</button></div>
       </div>
-      <div style="font-size:12px;line-height:1.8;margin-bottom:10px">${k.str?`📍 ${k.str}, ${k.plz} ${k.ort}<br>`:''} ${k.tel?`📞 ${k.tel}<br>`:''} ${k.mail?`✉️ ${k.mail}`:''}</div>
+      <div style="font-size:12px;line-height:1.8;margin-bottom:10px">
+        ${k.str?`📍 ${k.str}, ${k.plz} ${k.ort}<br>`:''}
+        ${k.tel?`📞 ${k.tel}<br>`:''}
+        ${k.mail?`✉️ ${k.mail}<br>`:''}
+        ${k.steuerid?`🏛 ${k.steuerid}<br>`:''}
+        ${k.geburt?`🎂 ${fmtD(k.geburt)}${isBirthdaySoon(k.geburt)?' <span style="color:var(--gold);font-weight:700">🎉 Bald!</span>':''}`:''}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:9px;background:var(--g1);border-radius:7px;margin-bottom:10px;text-align:center">
         <div><div style="font-size:17px;font-weight:700">${ac}</div><div style="font-size:10px;color:var(--g4)">Angebote</div></div>
         <div><div style="font-size:17px;font-weight:700">${rc}</div><div style="font-size:10px;color:var(--g4)">Rechnungen</div></div>
         <div><div style="font-size:13px;font-weight:700;color:var(--green)">${euroK(um)}</div><div style="font-size:10px;color:var(--g4)">Umsatz</div></div>
       </div>
+      ${(k.steuerid||k.geburt)?`
+      <div style="padding:8px 10px;background:#F5EDD8;border-radius:7px;margin-bottom:10px;font-size:11.5px;line-height:1.9;border-left:3px solid var(--gold)">
+        <div style="font-size:9px;font-weight:700;color:var(--dk);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">📋 Antragsdaten</div>
+        ${k.steuerid?`<div><span style="color:var(--g4)">Steuer-ID:</span> <b style="color:var(--dk)">${k.steuerid}</b></div>`:''}
+        ${k.geburt?`<div><span style="color:var(--g4)">Geburtsdatum:</span> <b style="color:var(--dk)">${fmtD(k.geburt)}</b></div>`:''}
+      </div>`:''}
       <div style="display:flex;gap:7px">
         <button class="btn btn-out btn-sm" style="flex:1" onclick="newDoc('angebot','${k.id}')">📋 Angebot</button>
         <button class="btn btn-out btn-sm" style="flex:1" onclick="newDoc('rechnung','${k.id}')">🧾 Rechnung</button>
@@ -2717,6 +2833,248 @@ async function doMahnung(id, stufe, gebuehr){
     // Vorschau öffnen
     setTimeout(()=>prevDoc('rechnung', ref.id), 500);
   }catch(e){ toast('Fehler: '+e.message,'e'); }
+}
+
+// ── CRM & AKTIVITÄTEN ────────────────────────────
+let S_aktivitaeten = [];
+
+async function loadAktivitaeten(){
+  try{
+    const snap = await db.collection('aktivitaeten').orderBy('ts','desc').get();
+    S_aktivitaeten = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderCRM();
+    updateCRMBadge();
+  }catch(e){ console.log('CRM:',e); }
+}
+
+function updateCRMBadge(){
+  const heute = today();
+  const faellig = S_aktivitaeten.filter(a=>
+    a.typ==='wiedervorlage' && !a.erledigt && a.wvDatum && a.wvDatum<=heute
+  ).length;
+  const badge = document.getElementById('b-crm');
+  if(badge){
+    badge.textContent = faellig;
+    badge.style.display = faellig ? 'inline-flex' : 'none';
+  }
+}
+
+function renderCRM(){
+  renderAktivitaeten();
+  renderWiedervorlagen();
+  renderPipeline();
+}
+
+function renderWiedervorlagen(){
+  const el = document.getElementById('wv-list');
+  if(!el) return;
+  const heute = today();
+  const wvs = S_aktivitaeten.filter(a=>
+    a.typ==='wiedervorlage' && !a.erledigt
+  ).sort((a,b)=>(a.wvDatum||'').localeCompare(b.wvDatum||''));
+  
+  if(!wvs.length){
+    el.innerHTML = '<div style="padding:12px 18px;color:var(--g4);font-size:13px">✅ Keine offenen Aufgaben</div>';
+    return;
+  }
+  
+  el.innerHTML = wvs.map(w=>{
+    const late = w.wvDatum && w.wvDatum < heute;
+    const today2 = w.wvDatum === heute;
+    const kunde = S.kunden.find(k=>k.id===w.kundeId);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--g2);${late?'background:#FFF5F5':today2?'background:#FFFBEB':''}">
+      <div style="font-size:18px">${late?'🔴':today2?'🟡':'🔔'}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${w.wvText||w.betreff||'Aufgabe'}</div>
+        <div style="font-size:11.5px;color:var(--g4)">${kunde?kunde.name+' · ':''}${fmtD(w.wvDatum)}${late?' – <span style="color:var(--red);font-weight:700">ÜBERFÄLLIG</span>':today2?' – <span style="color:var(--orange);font-weight:700">HEUTE</span>':''}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-out btn-xs" onclick="editAktivitaet('${w.id}')">✏️</button>
+        <button class="btn btn-gold btn-xs" onclick="erledigeAufgabe('${w.id}')">✅</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAktivitaeten(){
+  const el = document.getElementById('akt-list');
+  if(!el) return;
+  const liste = S_aktivitaeten.filter(a=>a.typ!=='wiedervorlage').slice(0,20);
+  
+  if(!liste.length){
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--g4);font-size:13px">Noch keine Aktivitäten</div>';
+    return;
+  }
+  
+  const icons = {anruf:'📞',email:'✉️',termin:'📅',angebot:'📋',auftrag:'✅',notiz:'📝',wiedervorlage:'🔔'};
+  
+  el.innerHTML = liste.map(a=>{
+    const kunde = S.kunden.find(k=>k.id===a.kundeId);
+    return `<div style="display:flex;gap:12px;padding:10px 18px;border-bottom:1px solid var(--g2);align-items:flex-start">
+      <div style="font-size:20px;margin-top:2px">${icons[a.typ]||'📝'}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${a.betreff||a.typ}</div>
+        ${kunde?`<div style="font-size:11.5px;color:var(--gold);font-weight:600">${kunde.name}</div>`:''}
+        ${a.notiz?`<div style="font-size:11.5px;color:var(--g4);margin-top:2px;line-height:1.5">${a.notiz}</div>`:''}
+        <div style="font-size:10.5px;color:var(--g4);margin-top:3px">${fmtD(a.datum)}</div>
+      </div>
+      <button class="btn btn-ghost btn-ico btn-xs" onclick="delAktivitaet('${a.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function renderPipeline(){
+  const pipes = {
+    interesse: document.getElementById('pipe-interesse'),
+    angebot: document.getElementById('pipe-angebot'),
+    auftrag: document.getElementById('pipe-auftrag'),
+    done: document.getElementById('pipe-done')
+  };
+  if(!pipes.interesse) return;
+  
+  // Kunden nach letzter Aktivität einordnen
+  const kundenStatus = {};
+  S.kunden.forEach(k=>{
+    const angebote = S.angebote.filter(a=>a.kundeId===k.id);
+    const rechnungen = S.rechnungen.filter(r=>r.kundeId===k.id);
+    const hatAuftrag = rechnungen.length > 0 || angebote.some(a=>a.status==='Angenommen');
+    const hatAngebot = angebote.some(a=>a.status==='Offen');
+    const abgeschlossen = rechnungen.some(r=>r.status==='Bezahlt');
+    
+    if(abgeschlossen) kundenStatus[k.id] = 'done';
+    else if(hatAuftrag) kundenStatus[k.id] = 'auftrag';
+    else if(hatAngebot) kundenStatus[k.id] = 'angebot';
+    else kundenStatus[k.id] = 'interesse';
+  });
+  
+  Object.values(pipes).forEach(p=>{ if(p) p.innerHTML = ''; });
+  
+  S.kunden.forEach(k=>{
+    const status = kundenStatus[k.id] || 'interesse';
+    const pipe = pipes[status];
+    if(!pipe) return;
+    const chip = document.createElement('div');
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid var(--g2);border-radius:20px;padding:4px 10px;font-size:11.5px;font-weight:600;cursor:pointer;margin:2px;white-space:nowrap';
+    chip.innerHTML = k.name;
+    chip.onclick = ()=>{ goto('kunden',document.getElementById('n-kunden')); };
+    pipe.appendChild(chip);
+  });
+  
+  Object.entries(pipes).forEach(([key,pipe])=>{
+    if(pipe && !pipe.children.length){
+      pipe.innerHTML = '<div style="font-size:11px;color:var(--g4);padding:4px">Keine Kunden</div>';
+    }
+  });
+}
+
+function openAktivitaet(a, defaultTyp){
+  a = a || null;
+  defaultTyp = defaultTyp || 'notiz';
+  document.getElementById('m-akt-title').textContent = a ? 'Aktivität bearbeiten' : 'Neue Aktivität';
+  document.getElementById('akt-id').value = a ? a.id : '';
+  document.getElementById('akt-datum').value = a ? a.datum : today();
+  document.getElementById('akt-typ').value = a ? a.typ : defaultTyp;
+  document.getElementById('akt-betreff').value = a ? a.betreff : '';
+  document.getElementById('akt-notiz').value = a ? a.notiz : '';
+  document.getElementById('akt-erledigt').checked = a ? a.erledigt||false : false;
+  
+  // Kunden Dropdown
+  const sel = document.getElementById('akt-kunde');
+  sel.innerHTML = '<option value="">– Kein Kunde –</option>' +
+    S.kunden.map(k=>`<option value="${k.id}"${a&&a.kundeId===k.id?' selected':''}>${k.name}</option>`).join('');
+  
+  // Wiedervorlage Felder
+  const wvRow = document.getElementById('akt-wv-row');
+  if(wvRow) wvRow.style.display = defaultTyp==='wiedervorlage'||( a&&a.typ==='wiedervorlage') ? 'block' : 'none';
+  document.getElementById('akt-wv-datum').value = a ? a.wvDatum||plusD(7) : plusD(7);
+  document.getElementById('akt-wv-text').value = a ? a.wvText||'' : '';
+  
+  // Typ change listener
+  document.getElementById('akt-typ').onchange = function(){
+    if(wvRow) wvRow.style.display = this.value==='wiedervorlage' ? 'block' : 'none';
+  };
+  
+  om('m-aktivitaet');
+}
+
+function editAktivitaet(id){
+  const a = S_aktivitaeten.find(x=>x.id===id);
+  if(a) openAktivitaet(a);
+}
+
+async function saveAktivitaet(){
+  const id = document.getElementById('akt-id').value;
+  const typ = document.getElementById('akt-typ').value;
+  const data = {
+    datum: document.getElementById('akt-datum').value,
+    typ: typ,
+    kundeId: document.getElementById('akt-kunde').value,
+    betreff: document.getElementById('akt-betreff').value,
+    notiz: document.getElementById('akt-notiz').value,
+    erledigt: document.getElementById('akt-erledigt').checked,
+    wvDatum: typ==='wiedervorlage' ? document.getElementById('akt-wv-datum').value : null,
+    wvText: typ==='wiedervorlage' ? document.getElementById('akt-wv-text').value : null,
+    ts: Date.now()
+  };
+  
+  try{
+    if(id){
+      await db.collection('aktivitaeten').doc(id).update(data);
+      const i = S_aktivitaeten.findIndex(x=>x.id===id);
+      if(i>=0) S_aktivitaeten[i] = Object.assign({},S_aktivitaeten[i],data);
+      toast('Gespeichert!','s');
+    } else {
+      const ref = await db.collection('aktivitaeten').add(data);
+      S_aktivitaeten.unshift(Object.assign({id:ref.id},data));
+      toast('Aktivität hinzugefügt!','s');
+    }
+    cm('m-aktivitaet');
+    renderCRM();
+    updateCRMBadge();
+  }catch(e){ toast('Fehler: '+e.message,'e'); }
+}
+
+async function erledigeAufgabe(id){
+  await db.collection('aktivitaeten').doc(id).update({erledigt:true, erledigtAm:today()});
+  const i = S_aktivitaeten.findIndex(x=>x.id===id);
+  if(i>=0) S_aktivitaeten[i].erledigt = true;
+  renderCRM();
+  updateCRMBadge();
+  toast('Aufgabe erledigt! ✅','s');
+}
+
+async function delAktivitaet(id){
+  if(!confirm('Aktivität löschen?')) return;
+  await db.collection('aktivitaeten').doc(id).delete();
+  S_aktivitaeten = S_aktivitaeten.filter(x=>x.id!==id);
+  renderCRM();
+  updateCRMBadge();
+  toast('Gelöscht.','e');
+}
+
+function isBirthdaySoon(geburt){
+  if(!geburt) return false;
+  const heute = new Date();
+  const gb = new Date(geburt);
+  const naechster = new Date(heute.getFullYear(), gb.getMonth(), gb.getDate());
+  if(naechster < heute) naechster.setFullYear(heute.getFullYear()+1);
+  const diff = (naechster - heute) / (1000*60*60*24);
+  return diff <= 14;
+}
+
+function checkGeburtstage(){
+  const heute = new Date();
+  const bald = S.kunden.filter(k=>{
+    if(!k.geburt) return false;
+    const gb = new Date(k.geburt);
+    const naechster = new Date(heute.getFullYear(), gb.getMonth(), gb.getDate());
+    if(naechster < heute) naechster.setFullYear(heute.getFullYear()+1);
+    const diff = (naechster - heute) / (1000*60*60*24);
+    return diff <= 7;
+  });
+  if(bald.length){
+    toast('🎂 Geburtstag in 7 Tagen: ' + bald.map(k=>k.name).join(', '),'');
+  }
 }
 
 </script>
