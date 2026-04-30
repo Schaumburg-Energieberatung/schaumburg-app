@@ -1137,13 +1137,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-// Login Button sicher registrieren
-document.addEventListener('DOMContentLoaded', function(){
-  const loginBtn = document.getElementById('login-btn');
-  if(loginBtn) loginBtn.onclick = doLogin;
-  const pwField = document.getElementById('l-pw');
-  if(pwField) pwField.addEventListener('keypress', function(e){ if(e.key==='Enter') doLogin(); });
-});
+// Login wird am Ende registriert
 emailjs.init('v5WRshMNtFVNfv6rB');
 
 const db = firebase.firestore();
@@ -3091,6 +3085,21 @@ function checkGeburtstage(){
     toast('🎂 Geburtstag in 7 Tagen: ' + bald.map(k=>k.name).join(', '),'');
   }
 }
+
+// Login sicher registrieren - am Ende wenn alles geladen
+window.addEventListener('load', function(){
+  const loginBtn = document.getElementById('login-btn');
+  if(loginBtn){
+    loginBtn.removeAttribute('onclick');
+    loginBtn.addEventListener('click', doLogin);
+  }
+  const pwField = document.getElementById('l-pw');
+  if(pwField){
+    pwField.removeEventListener('keypress', null);
+    pwField.addEventListener('keypress', function(e){ if(e.key==='Enter') doLogin(); });
+  }
+  console.log('App bereit - Login Button registriert');
+});
 
 </script>
 </body>
