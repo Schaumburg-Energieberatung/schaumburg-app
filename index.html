@@ -1146,12 +1146,13 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 emailjs.init('v5WRshMNtFVNfv6rB');
 
+const db = firebase.firestore();
+const auth = firebase.auth();
+
 // Kunden-Ansicht: nach Firebase init laden
 if(window._isKundenView){
   loadKundenDoc(window._kvTyp, window._kvDocId);
 }
-const db = firebase.firestore();
-const auth = firebase.auth();
 
 // STATE
 const S = {
@@ -2185,11 +2186,17 @@ window._kvLogo = "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAA
   window._kvDocId = docId;
   
   if(typ && docId){
-    // Sofort alles verstecken
-    document.getElementById('login').style.display='none';
-    document.getElementById('app').style.display='none';
+    // Sofort alles verstecken - nur bei echtem Kunden-Link
+    const loginEl = document.getElementById('login');
+    const appEl = document.getElementById('app');
     const kv = document.getElementById('kunden-view');
-    if(kv){ kv.style.display='block'; }
+    if(loginEl) loginEl.style.display='none';
+    if(appEl) appEl.style.display='none';
+    if(kv) kv.style.display='block';
+  } else {
+    // Normal - Login anzeigen
+    const loginEl = document.getElementById('login');
+    if(loginEl) loginEl.style.display='flex';
   }
 })();
 
@@ -2593,10 +2600,10 @@ let S_leistungen = [];
 
 function initLeistungen(){
   // Beim ersten Mal aus LEIST + LEIST_TEXT laden
-  const saved = localStorage.getItem('schaumburg_leistungen');
-  if(saved){
-    try{ S_leistungen = JSON.parse(saved); }catch(e){}
-  }
+  try{
+    const saved = localStorage.getItem('schaumburg_leistungen');
+    if(saved){ S_leistungen = JSON.parse(saved); }
+  }catch(e){ console.log('localStorage nicht verfuegbar'); }
   if(!S_leistungen.length){
     // Standard-Leistungen aus LEIST laden
     S_leistungen = LEIST
@@ -2670,7 +2677,7 @@ function delLeistung(i){
 }
 
 function saveLeistungenLocal(){
-  try{ localStorage.setItem('schaumburg_leistungen', JSON.stringify(S_leistungen)); }catch(e){}
+  try{ localStorage.setItem('schaumburg_leistungen', JSON.stringify(S_leistungen)); }catch(e){ console.log('localStorage nicht verfuegbar'); }
 }
 
 function updateLeistDropdowns(){
