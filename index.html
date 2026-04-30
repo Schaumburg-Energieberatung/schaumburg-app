@@ -2192,6 +2192,196 @@ async function delAusgabe(id){
   }catch(e){ toast('Fehler: '+e.message,'e'); }
 }
 
+// ── AUSGABEN ────────────────────────────────────
+let S_ausgaben = [];
+
+async function loadAusgaben(){
+  try{
+    const snap = await db.collection('ausgaben').orderBy('datum','desc').get();
+    S_ausgaben = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAusgaben();
+  }catch(e){ console.log('Ausgaben:',e); }
+}
+
+function renderAusgaben(){
+  const tbody = document.getElementById('ausgaben-body');
+  if(!tbody) return;
+  if(!S_ausgaben.length){
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="ei">💸</div><div class="et">Keine Ausgaben</div><div class="es">Trage deine Betriebsausgaben ein</div></div></td></tr>';
+    const sumEl = document.getElementById('aus-sum');
+    if(sumEl) sumEl.textContent = '0,00 €';
+    return;
+  }
+  tbody.innerHTML = S_ausgaben.map(a=>`<tr>
+    <td>${fmtD(a.datum)}</td>
+    <td><span class="badge b-open">${a.kat||'Sonstiges'}</span></td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.desc||'–'}</td>
+    <td style="font-weight:700">${euro(a.betrag||0)}</td>
+    <td style="font-size:11px;color:var(--g4)">${a.beleg||'–'}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn btn-out btn-xs" onclick="editAusgabe('${a.id}')">✏️</button>
+      <button class="btn btn-ghost btn-ico btn-xs" onclick="delAusgabe('${a.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+  const sum = S_ausgaben.reduce((s,a)=>s+(a.betrag||0),0);
+  const sumEl = document.getElementById('aus-sum');
+  if(sumEl) sumEl.textContent = euro(sum);
+}
+
+function openAusgabe(a){
+  a = a || null;
+  document.getElementById('m-aus-title').textContent = a ? 'Ausgabe bearbeiten' : 'Neue Ausgabe';
+  document.getElementById('aus-id').value = a ? a.id : '';
+  document.getElementById('aus-datum').value = a ? a.datum : today();
+  document.getElementById('aus-betrag').value = a ? a.betrag : '';
+  document.getElementById('aus-kat').value = a ? a.kat : 'Fahrtkosten';
+  document.getElementById('aus-desc').value = a ? a.desc : '';
+  document.getElementById('aus-beleg').value = a ? a.beleg : '';
+  document.getElementById('aus-zart').value = a ? a.zart : 'Bar';
+  document.getElementById('aus-notiz').value = a ? a.notiz : '';
+  om('m-ausgabe');
+}
+
+function editAusgabe(id){
+  const a = S_ausgaben.find(x=>x.id===id);
+  if(a) openAusgabe(a);
+}
+
+async function saveAusgabe(){
+  const id = document.getElementById('aus-id').value;
+  const betrag = parseFloat(document.getElementById('aus-betrag').value)||0;
+  if(!betrag){ toast('Bitte Betrag eingeben!','e'); return; }
+  const data = {
+    datum: document.getElementById('aus-datum').value,
+    betrag: betrag,
+    kat: document.getElementById('aus-kat').value,
+    desc: document.getElementById('aus-desc').value,
+    beleg: document.getElementById('aus-beleg').value,
+    zart: document.getElementById('aus-zart').value,
+    notiz: document.getElementById('aus-notiz').value,
+    ts: Date.now()
+  };
+  try{
+    if(id){
+      await db.collection('ausgaben').doc(id).update(data);
+      const i = S_ausgaben.findIndex(x=>x.id===id);
+      if(i>=0) S_ausgaben[i] = Object.assign({}, S_ausgaben[i], data);
+      toast('Ausgabe aktualisiert!','s');
+    } else {
+      const ref = await db.collection('ausgaben').add(data);
+      S_ausgaben.unshift(Object.assign({id:ref.id}, data));
+      toast('Ausgabe gespeichert!','s');
+    }
+    cm('m-ausgabe');
+    renderAusgaben();
+  }catch(e){ toast('Fehler: '+e.message,'e'); }
+}
+
+function openExportEUR(){ om('m-euer'); }
+
+function doEuerExport(){
+  const period = document.getElementById('euer-period').value;
+  let year, qStart, qEnd;
+  if(period.startsWith('q')){
+    const parts = period.split('-');
+    const q = parseInt(parts[0].replace('q',''));
+    year = parseInt(parts[1]);
+    qStart = (q-1)*3;
+    qEnd = q*3-1;
+  } else {
+    year = parseInt(period);
+    qStart = undefined;
+    qEnd = undefined;
+  }
+  
+  let einnahmen = S.rechnungen.filter(r=>r.status==='Bezahlt');
+  let ausgaben = S_ausgaben.slice();
+  
+  if(qStart !== undefined){
+    einnahmen = einnahmen.filter(function(r){
+      const d = new Date(r.bezahltAm||r.datum);
+      return d.getFullYear()===year && d.getMonth()>=qStart && d.getMonth()<=qEnd;
+    });
+    ausgaben = ausgaben.filter(function(a){
+      const d = new Date(a.datum);
+      return d.getFullYear()===year && d.getMonth()>=qStart && d.getMonth()<=qEnd;
+    });
+  } else {
+    einnahmen = einnahmen.filter(function(r){ return new Date(r.bezahltAm||r.datum).getFullYear()===year; });
+    ausgaben = ausgaben.filter(function(a){ return new Date(a.datum).getFullYear()===year; });
+  }
+  
+  const totalEin = einnahmen.reduce(function(s,r){ return s+(r.netto||r.gesamt||0); },0);
+  const totalAus = ausgaben.reduce(function(s,a){ return s+(a.betrag||0); },0);
+  const gewinn = totalEin - totalAus;
+  
+  function euro2(n){ return (n||0).toFixed(2).replace('.',','); }
+  function fmtDate(d){ if(!d)return''; try{ return new Date(d).toLocaleDateString('de-DE'); }catch(e){ return d; } }
+  
+  let csv = '﻿';
+  csv += 'EINNAHMEN-UEBERSCHUSS-RECHNUNG (EUeR)
+';
+  csv += (S.cfg.firma||'Schaumburg Energieberatung & Planung')+'
+';
+  csv += (S.cfg.inhaber||'Hakan Tekin')+' - Steuernummer: '+(S.cfg.steuernr||'')+'
+';
+  csv += 'Kleinunternehmer gemaess 19 Abs. 1 UStG
+';
+  csv += 'Zeitraum: '+period+'
+';
+  csv += 'Erstellt am: '+new Date().toLocaleDateString('de-DE')+'
+
+';
+  
+  csv += 'EINNAHMEN (bezahlte Rechnungen)
+';
+  csv += 'Datum;Rechnungsnummer;Kunde;Beschreibung;Betrag (Euro)
+';
+  einnahmen.forEach(function(r){
+    csv += fmtDate(r.bezahltAm||r.datum)+';'+(r.nr||'')+';'+(r.kundeName||'').replace(/;/g,' ')+';'+(r.betreff||'').replace(/;/g,' ')+';'+euro2(r.netto||r.gesamt||0)+'
+';
+  });
+  csv += ';;Gesamt Einnahmen;;'+euro2(totalEin)+'
+
+';
+  
+  csv += 'BETRIEBSAUSGABEN
+';
+  csv += 'Datum;Kategorie;Beschreibung;Beleg;Betrag (Euro)
+';
+  ausgaben.forEach(function(a){
+    csv += fmtDate(a.datum)+';'+(a.kat||'').replace(/;/g,' ')+';'+(a.desc||'').replace(/;/g,' ')+';'+(a.beleg||'')+';'+euro2(a.betrag||0)+'
+';
+  });
+  csv += ';;Gesamt Ausgaben;;'+euro2(totalAus)+'
+
+';
+  
+  csv += 'ZUSAMMENFASSUNG
+';
+  csv += 'Einnahmen gesamt;;'+euro2(totalEin)+'
+';
+  csv += 'Ausgaben gesamt;;'+euro2(totalAus)+'
+';
+  csv += 'Gewinn/Verlust;;'+euro2(gewinn)+'
+
+';
+  csv += 'Gemaess 19 Abs. 1 UStG wird keine Umsatzsteuer berechnet und ausgewiesen.
+';
+  
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'EUeR_'+period+'_Schaumburg.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  cm('m-euer');
+  toast('EUeR exportiert!','s');
+}
+
 </script>
 </body>
 </html>
