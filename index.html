@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -328,10 +329,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 @media print{
   /* Hintergrundfarben erzwingen */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-  /* QR-Code beim Drucken linksbündig */
+  /* QR-Code beim Drucken erzwingen */
+  #prev-wrap img { display: block !important; -webkit-print-color-adjust: exact !important; }
   #prev-wrap [style*="justify-content:flex-start"] { justify-content: flex-start !important; text-align: left !important; }
-  #prev-wrap [id^="qr-"] { display: block !important; float: none !important; }
   #prev-wrap [style*="float:left"] { float: left !important; text-align: left !important; }
+  /* QR-Code Bereich immer anzeigen */
+  #prev-wrap [style*="background:#F7F9F8"] { display: block !important; page-break-inside: avoid !important; }
   /* Alles außer Vorschau verstecken */
   body > *:not(#m-prev) { display: none !important; }
   #m-prev { 
@@ -727,6 +730,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
             <div style="display:flex;align-items:center;gap:7px">
               <input type="checkbox" id="eisfp" onchange="cBeg()" style="width:16px;height:16px">
               <label for="eisfp" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">iSFP-Bonus +5%</label>
+            </div>
+            <div id="ek-nat-row" style="display:none;align-items:center;gap:7px">
+              <input type="checkbox" id="ek-nat" onchange="cBeg()" style="width:16px;height:16px">
+              <label for="ek-nat" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">Effizienzbonus – natürl. Kältemittel (z.B. Propan R290) oder Wärmequelle Wasser/Erdreich/Abwasser +5%</label>
             </div>
           </div>
           <div style="background:var(--dk);border-radius:var(--r);padding:14px">
@@ -2036,7 +2043,7 @@ function prevDoc(type,id){
       ${!isA ? `
       <div style="padding:10px 22px 8px;border-top:1px solid #EEF2F1;background:#F7F9F8;text-align:left">
         <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:18px;float:left;width:100%">
-          ${C.iban ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&format=png&ecc=M&data=${encodeURIComponent(['BCD','002','1','SCT',C.bic||'',C.inhaber||'Hakan Tekin',(C.iban||'').replace(/\\s/g,''),'EUR'+(d.gesamt||0).toFixed(2),'',d.nr||'',''].join('\n'))}" style="width:70px;height:70px;flex-shrink:0" alt="GiroCode">` : '<div style="width:70px;height:70px;flex-shrink:0;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#CC0000;text-align:center">IBAN in<br>Einstellungen<br>eintragen</div>'}
+          ${C.iban ? `<canvas id="qr-canvas-${d.id||'x'}" style="width:70px;height:70px;flex-shrink:0"></canvas>` : '<div style="width:70px;height:70px;flex-shrink:0;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#CC0000;text-align:center">IBAN in<br>Einstellungen<br>eintragen</div>'}
           <div style="flex:0 1 auto;padding-left:4px">
             <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Zahlung per QR-Code (GiroCode)</div>
             ${C.iban ? `<div style="font-size:9px;color:#444;line-height:1.8">Scannen Sie mit Ihrer Banking-App.<br>Betrag, IBAN und Verwendungszweck werden automatisch übernommen.</div>
@@ -2067,7 +2074,29 @@ function prevDoc(type,id){
   `;
   om('m-prev');
   
-  // QR-Code wird als img direkt generiert
+  // QR-Code als Canvas generieren (funktioniert auch beim Drucken/Download)
+  if(!isA && C.iban){
+    setTimeout(function(){
+      const canvas = document.getElementById('qr-canvas-'+(d.id||'x'));
+      if(!canvas) return;
+      const epc = [
+        'BCD','002','1','SCT',
+        C.bic||'',
+        C.inhaber||'Hakan Tekin',
+        (C.iban||'').replace(/\s/g,''),
+        'EUR'+(d.gesamt||0).toFixed(2),
+        '',d.nr||'',''
+      ].join('\n');
+      try{
+        QRCode.toCanvas(canvas, epc, {
+          width: 70,
+          margin: 1,
+          color: { dark: '#0D3B36', light: '#F7F9F8' },
+          errorCorrectionLevel: 'M'
+        }, function(err){ if(err) console.log('QR:', err); });
+      }catch(e){ console.log('QR Fehler:', e); }
+    }, 400);
+  }
 }
 
 async function acceptAng(id){
@@ -3210,10 +3239,20 @@ function cBeg(){
   var q = parseInt(document.getElementById('em').value) || 15;
   var ek = document.getElementById('ek') && document.getElementById('ek').checked;
   var eisfp = document.getElementById('eisfp') && document.getElementById('eisfp').checked;
+  var ekNat = document.getElementById('ek-nat') && document.getElementById('ek-nat').checked;
+  
+  // Natürlichkeit-Bonus nur bei Wärmepumpe (value=30 erste Option)
+  var emVal = document.getElementById('em') ? document.getElementById('em').value : '15';
+  var emText = document.getElementById('em') ? document.getElementById('em').options[document.getElementById('em').selectedIndex].text : '';
+  var isWP = emText.indexOf('Wärmepumpe') >= 0;
+  var natRow = document.getElementById('ek-nat-row');
+  if(natRow) natRow.style.display = isWP ? 'flex' : 'none';
+  if(!isWP && document.getElementById('ek-nat')) document.getElementById('ek-nat').checked = false;
   
   var quote = q / 100;
   if(ek) quote += 0.20;
   if(eisfp) quote += 0.05;
+  if(isWP && ekNat) quote += 0.05;
   quote = Math.min(quote, 0.70);
   
   // Max förderfähige Kosten: 60.000 €
