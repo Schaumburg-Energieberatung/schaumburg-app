@@ -250,8 +250,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 .dl{width:auto;height:auto;max-height:130px;min-height:120px;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:stretch}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
 .dn{font-family:'Cormorant Garamond',serif;font-size:46px;color:#C9A961;font-weight:800;font-style:italic;letter-spacing:.3px;line-height:1.2}
-.ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:400;text-transform:uppercase}
-.dc{font-size:10.5px;color:rgba(255,255,255,.88);margin-top:7px;line-height:1.85}
+.ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:600;text-transform:uppercase;-webkit-font-smoothing:antialiased}
+.dc{font-size:10.5px;color:rgba(255,255,255,.95);margin-top:7px;line-height:1.85;font-weight:500;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 .dgl{height:3px;background:#C9A961}
 .dab{font-size:9px;color:#888;padding:8px 26px 0}
 .dmeta{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 22px}
@@ -997,6 +997,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
       <!-- TEXTE -->
       <div id="tc-txt" style="display:none">
         <div class="fg" style="gap:12px">
+          <div class="fld fc">
+            <label>Anschreiben – Info-Baustein einfügen</label>
+            <select id="d-info-baustein" onchange="applyInfoBaustein()" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12.5px;background:var(--g1);outline:none;width:100%;margin-bottom:6px">
+              <option value="">– Info-Baustein wählen & ins Anschreiben einfügen –</option>
+              <optgroup label="── Förderung Energieberatung ──">
+                <option value="bafa_ebw">BAFA EBW – Förderhinweis Energieberatung</option>
+                <option value="isfp_info">iSFP – Erklärung & Förderbonus +5%</option>
+              </optgroup>
+              <optgroup label="── Förderung Einzelmaßnahmen ──">
+                <option value="beg_em_basis">BEG EM – Basisinfo Einzelmaßnahmen</option>
+                <option value="gebaeudehuell">Gebäudehülle – 15% Basis / mit iSFP 20%</option>
+                <option value="heizung_kfw">Heizungstausch KfW 458 – alle Boni erklärt</option>
+                <option value="klimabonus">Klimageschwindigkeitsbonus – Voraussetzungen</option>
+              </optgroup>
+              <optgroup label="── Planungsleistungen ──">
+                <option value="planung_foerd">Fachplanung & Baubegleitung – 50% förderfähig</option>
+                <option value="heizlast_info">Heizlastberechnung – Pflicht & Nutzen</option>
+                <option value="hydraulik_info">Hydraulischer Abgleich – Pflicht & Förderung</option>
+              </optgroup>
+            </select>
+          </div>
           <div class="fld fc"><label>Anschreiben</label><textarea id="d-ansch" rows="6" placeholder="Sehr geehrte Damen und Herren,…"></textarea></div>
           <div class="fld fc">
             <label>Zahlungshinweis-Baustein (nur bei Rechnung)</label>
@@ -3437,6 +3458,119 @@ function applyBaustein(){
   hinwEl.setSelectionRange(hinwEl.value.length, hinwEl.value.length);
   
   toast('Baustein eingefügt – du kannst ihn direkt bearbeiten!', 's');
+}
+
+// ── INFO-BAUSTEINE FÖRDERUNG ─────────────────────
+const INFO_BAUSTEINE = {
+
+  bafa_ebw: `Förderhinweis – BAFA Energieberatung für Wohngebäude (EBW):
+
+Die Kosten für die Energieberatung sind durch die BAFA (Bundesamt für Wirtschaft und Ausfuhrkontrolle) förderfähig. Der Zuschuss beträgt 50 % der förderfähigen Beratungskosten – maximal 650 € bei Ein- und Zweifamilienhäusern bzw. 850 € bei Mehrfamilienhäusern (ab 3 Wohneinheiten).
+
+Wichtig: Der Förderantrag muss zwingend vor Beauftragung des Energieberaters gestellt werden. Wir unterstützen Sie gerne bei der Antragstellung.`,
+
+  isfp_info: `Hinweis zum individuellen Sanierungsfahrplan (iSFP):
+
+Der iSFP ist das Ergebnis einer geförderten Energieberatung nach BAFA EBW. Er zeigt Ihnen den optimalen Weg zur schrittweisen energetischen Sanierung – zugeschnitten auf Ihr Gebäude, Ihre Ziele und Ihr Budget.
+
+Besonderer Vorteil: Mit einem gültigen iSFP erhalten Sie bei allen Einzelmaßnahmen (BEG EM) einen zusätzlichen Förderbonus von 5 % – und die maximalen förderfähigen Kosten steigen von 30.000 € auf 60.000 € pro Wohneinheit. Der iSFP ist 15 Jahre gültig.`,
+
+  beg_em_basis: `Förderhinweis – BEG EM (Bundesförderung für effiziente Gebäude – Einzelmaßnahmen):
+
+Für energetische Sanierungsmaßnahmen an Ihrem Gebäude können Sie Zuschüsse über das BAFA beantragen. Die Grundförderung beträgt 15 % der förderfähigen Kosten. Mit einem individuellen Sanierungsfahrplan (iSFP) erhöht sich die Förderung auf 20 %, und die maximale Förderbasis steigt von 30.000 € auf 60.000 € pro Wohneinheit.
+
+Antragstellung: Vor Beginn der Maßnahme über das BAFA-Online-Portal. Wir begleiten Sie als zugelassener Energieeffizienz-Experte (EEE) durch den gesamten Prozess.`,
+
+  gebaeudehuell: `Förderung Gebäudehülle – BEG EM (BAFA):
+
+• Basisförderung: 15 % der förderfähigen Kosten
+• Mit iSFP-Bonus: 20 % der förderfähigen Kosten
+• Max. förderfähige Kosten: 30.000 € (ohne iSFP) / 60.000 € (mit iSFP) pro Wohneinheit
+• Förderfähige Maßnahmen: Dämmung Außenwände, Dach, Kellerdecke; Fenster & Türen; Sommerlicher Wärmeschutz; Lüftungsanlage
+
+Der iSFP-Bonus von 5 % lohnt sich fast immer – bei 60.000 € förderfähigen Kosten bedeutet das 3.000 € mehr Förderung allein durch den iSFP.`,
+
+  heizung_kfw: `Förderung Heizungstausch – KfW 458 (Bundesförderung für effiziente Gebäude):
+
+Die KfW fördert den Austausch fossiler Heizungen gegen klimafreundliche Systeme (Wärmepumpe, Biomasse, Solarthermie) mit bis zu 70 % der förderfähigen Kosten (max. 30.000 € pro Wohneinheit):
+
+• Grundförderung: 30 % (für alle Eigentümer)
+• Effizienzbonus: +5 % (Wärmepumpe mit natürlichem Kältemittel z.B. Propan R290, oder Wärmequelle Wasser/Erdreich/Abwasser)
+• Klimageschwindigkeitsbonus: +20 % (bis Ende 2028, Voraussetzungen beachten)
+• Einkommensbonus: +30 % (Haushaltseinkommen max. 40.000 €/Jahr)
+• Maximum: 70 % Gesamtförderung
+
+Antrag: Vor Vertragsabschluss über das KfW-Kundenportal "Meine KfW". Als Energieeffizienz-Experte erstellen wir für Sie die erforderliche Bestätigung zum Antrag (BzA).`,
+
+  klimabonus: `Klimageschwindigkeitsbonus – Voraussetzungen (KfW 458):
+
+Der Klimageschwindigkeitsbonus beträgt 20 % der förderfähigen Kosten (bis Ende 2028) und kann zusätzlich zur Grundförderung beantragt werden.
+
+Voraussetzungen:
+✓ Selbstnutzende Eigentümer (kein Bonus für Vermieter)
+✓ Die ersetzte Heizung muss noch funktionsfähig sein
+✓ Öl-, Kohle-, Gas-Etagenheizungen oder Nachtspeicherheizungen: altersunabhängig förderfähig
+✓ Gas-Zentralheizungen und Biomasseheizungen: mindestens 20 Jahre alt
+✗ Bei irreparablem Defekt entfällt der Bonus
+
+Zeitplan: Ab 2029 sinkt der Bonus auf 17 %. Jetzt handeln lohnt sich!`,
+
+  planung_foerd: `Förderhinweis – Fachplanung & Baubegleitung:
+
+Unsere Planungs- und Beratungsleistungen als zugelassener Energieeffizienz-Experte (EEE) sind im Rahmen der BEG zu 50 % förderfähig:
+
+• BAFA BEG EM (Einzelmaßnahmen EFH/ZFH): max. 2.500 € Förderung
+• BAFA BEG EM (Mehrfamilienhaus): max. 2.000 € pro Wohneinheit
+• KfW BEG WG (Komplettsanierung EFH/ZFH): max. 5.000 € Förderung
+• KfW BEG WG (Mehrfamilienhaus): max. 4.000 € pro Wohneinheit
+
+Die Beauftragung eines Energieeffizienz-Experten ist für viele Maßnahmen gesetzlich vorgeschrieben und erhöht gleichzeitig Ihre Fördermöglichkeiten.`,
+
+  heizlast_info: `Heizlastberechnung gem. DIN EN 12831-1:
+
+Die raumweise Heizlastberechnung ist die Grundlage für eine korrekte Auslegung Ihrer neuen Heizungsanlage. Sie ist gesetzlich vorgeschrieben (GEG) und Voraussetzung für den hydraulischen Abgleich.
+
+Warum wichtig:
+• Verhindert Über- oder Unterdimensionierung der Heizung
+• Pflichtnachweis bei Neuinstallation einer Wärmepumpe
+• Voraussetzung für den hydraulischen Abgleich (Verfahren B)
+• Basis für die Beantragung von Fördermitteln (KfW/BAFA)
+
+Ohne korrekte Heizlastberechnung riskieren Sie eine ineffiziente Heizanlage und den Verlust von Fördermitteln.`,
+
+  hydraulik_info: `Hydraulischer Abgleich gem. VDI 2073 / GEG § 60a:
+
+Der hydraulische Abgleich (Verfahren B) stellt sicher, dass alle Heizkörper gleichmäßig mit Wärme versorgt werden – kein Zimmer wird zu warm oder zu kalt.
+
+Pflicht und Förderung:
+• Gesetzliche Pflicht nach GEG § 60a beim Heizungstausch
+• Voraussetzung für KfW Förderung (Heizungsoptimierung)
+• BEG EM fördert Heizungsoptimierung mit 15 % (max. 30.000 € förderfähige Kosten)
+• Reduziert Energieverbrauch um bis zu 15 %
+
+Wir führen den hydraulischen Abgleich nach Verfahren B durch und erstellen das vollständige Einstellprotokoll für alle Heizkörper.`
+};
+
+function applyInfoBaustein(){
+  const sel = document.getElementById('d-info-baustein');
+  if(!sel || !sel.value) return;
+  
+  const anschEl = document.getElementById('d-ansch');
+  if(!anschEl) return;
+  
+  const baustein = INFO_BAUSTEINE[sel.value] || '';
+  const aktuell = anschEl.value.trim();
+  
+  if(aktuell){
+    anschEl.value = aktuell + '\n\n' + baustein;
+  } else {
+    anschEl.value = baustein;
+  }
+  
+  sel.value = '';
+  anschEl.focus();
+  anschEl.setSelectionRange(anschEl.value.length, anschEl.value.length);
+  toast('Info-Baustein eingefügt – direkt bearbeitbar!', 's');
 }
 
 </script>
