@@ -249,7 +249,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 .dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden;min-height:120px}
 .dl{width:auto;height:auto;max-height:130px;min-height:120px;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:stretch}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
-.dn{font-family:'Cormorant Garamond',serif;font-size:46px;color:#C9A961;font-weight:800;font-style:italic;letter-spacing:.3px;line-height:1.2}
+.dn{font-family:'Cormorant Garamond',serif;font-size:53px;color:#C9A961;font-weight:800;font-style:italic;letter-spacing:.3px;line-height:1.2}
 .ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:600;text-transform:uppercase;-webkit-font-smoothing:antialiased}
 .dc{font-size:10.5px;color:rgba(255,255,255,.95);margin-top:7px;line-height:1.85;font-weight:500;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 .dgl{height:3px;background:#C9A961}
@@ -1020,7 +1020,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
           </div>
           <div class="fld fc"><label>Anschreiben</label><textarea id="d-ansch" rows="6" placeholder="Sehr geehrte Damen und Herren,…"></textarea></div>
           <div class="fld fc">
-            <label>Zahlungshinweis-Baustein (nur bei Rechnung)</label>
+            <label>Unterlagen-Baustein – ins Anschreiben einfügen</label>
             <select id="d-baustein" onchange="applyBaustein()" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12.5px;background:var(--g1);outline:none;width:100%;margin-bottom:6px">
               <option value="">– Baustein wählen & in Hinweis einfügen –</option>
               <option value="isfp">iSFP – nach Zahlung</option>
@@ -1343,7 +1343,7 @@ const S = {
     iban:'', bic:'', bank:'', mwst:false,
     atext:'Sehr geehrte Damen und Herren,\n\nvielen Dank für Ihr Interesse. Anbei erhalten Sie unser Angebot für die Energieberatung Ihres Objektes.\n\nFörderhinweis:\nDie Kosten für die Energieberatung sind förderfähig. Das BAFA (Bundesamt für Wirtschaft und Ausfuhrkontrolle) bezuschusst die Energieberatung mit 50 % der förderfähigen Beratungskosten – maximal 650 € bei Ein- und Zweifamilienhäusern bzw. 850 € bei Mehrfamilienhäusern (ab 3 Wohneinheiten). Der Antrag muss vor Beauftragung gestellt werden.\n\nAuf Wunsch begleiten wir Sie bei der Antragstellung. Gerne informieren wir Sie auch über weiterführende Förderprogramme der KfW (Kreditanstalt für Wiederaufbau) für energetische Sanierungsmaßnahmen.\n\nBei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.',
     ahinw:'Dieses Angebot ist freibleibend und gilt 30 Tage ab Ausstellungsdatum.\n\nWichtig: Der BAFA-Förderantrag muss zwingend vor Auftragserteilung gestellt werden. Nach Antragstellung kann die Beauftragung erfolgen. Gerne übernehmen wir auf Wunsch die Antragstellung für Sie sowie die energetische Baubegleitung gemäß KfW-Anforderungen (BEG).\n\nMit Auftragserteilung gelten unsere AGB.',
-    rtext:'Sehr geehrte Damen und Herren,\n\nfür die erbrachten Leistungen erlauben wir uns, Ihnen folgende Rechnung zu stellen.\n\nBitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen auf das unten angegebene Konto unter Angabe der Rechnungsnummer als Verwendungszweck.\n\nWir bedanken uns für Ihr Vertrauen und stehen Ihnen bei Rückfragen jederzeit gerne zur Verfügung.',
+    rtext:'Sehr geehrte Damen und Herren,\n\nvielen Dank für Ihren Auftrag. Für die erbrachten Leistungen erlauben wir uns, Ihnen beiliegende Rechnung zu stellen.\n\nBitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen auf das unten angegebene Konto unter Angabe der Rechnungsnummer als Verwendungszweck. Die beauftragten Unterlagen übermitteln wir Ihnen umgehend nach Zahlungseingang.\n\nBei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.',
     rhinw:'Gemäß § 19 Abs. 1 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet und ausgewiesen.\n\nVielen Dank für Ihren Auftrag!',
   }
 };
@@ -3422,42 +3422,44 @@ document.addEventListener('DOMContentLoaded', function(){
 // ── ZAHLUNGSHINWEIS BAUSTEINE ────────────────────
 const BAUSTEINE = {
   isfp: 'Die Übermittlung des individuellen Sanierungsfahrplans (iSFP) erfolgt nach Eingang der vollständigen Zahlung. Mit der Erstellung des iSFP wurde vereinbarungsgemäß bereits begonnen.',
-  heizlast: 'Die Übermittlung der Heizlastberechnung gem. DIN EN 12831-1 inkl. aller Berechnungsunterlagen erfolgt nach Eingang der vollständigen Zahlung.',
-  hydraulik: 'Die Übermittlung des Hydraulischen Abgleichs (Verfahren B gem. VDI 2073) inkl. Einstellprotokoll erfolgt nach Eingang der vollständigen Zahlung.',
-  heizlast_hydraulik: 'Die Übermittlung der Heizlastberechnung gem. DIN EN 12831-1 sowie des Hydraulischen Abgleichs (Verfahren B gem. VDI 2073) inkl. aller Berechnungsunterlagen und Einstellprotokoll erfolgt nach Eingang der vollständigen Zahlung.',
-  bericht: 'Der vollständige Vor-Ort-Beratungsbericht inkl. Maßnahmenempfehlungen und Fördermittelübersicht wird nach Eingang der vollständigen Zahlung übermittelt.',
-  energieausweis: 'Die Ausstellung und Übermittlung des Energieausweises gem. GEG 2023 erfolgt nach Eingang der vollständigen Zahlung. Die Eintragung in die Energieausweisdatenbank erfolgt zeitgleich.',
-  baubegleitung: 'Die abschließende Dokumentation der energetischen Baubegleitung gem. KfW BEG inkl. aller erforderlichen Nachweise und Bestätigungen wird nach Eingang der vollständigen Zahlung übermittelt.',
-  alle: 'Sämtliche erstellten Unterlagen, Berechnungen, Berichte und Nachweise werden nach Eingang der vollständigen Zahlung digital übermittelt. Bei Fragen zum Zahlungsvorgang stehen wir Ihnen jederzeit gerne zur Verfügung.'
+  heizlast: 'Die Heizlastberechnung gem. DIN EN 12831-1 inkl. aller Berechnungsunterlagen übermitteln wir Ihnen umgehend nach Zahlungseingang.',
+  hydraulik: 'Den Hydraulischen Abgleich (Verfahren B gem. VDI 2073) inkl. Einstellprotokoll übermitteln wir Ihnen umgehend nach Zahlungseingang.',
+  heizlast_hydraulik: 'Heizlastberechnung gem. DIN EN 12831-1 sowie Hydraulischen Abgleich (Verfahren B gem. VDI 2073) inkl. aller Berechnungsunterlagen und Einstellprotokoll übermitteln wir Ihnen umgehend nach Zahlungseingang.',
+  bericht: 'Den vollständigen Vor-Ort-Beratungsbericht inkl. Maßnahmenempfehlungen und Fördermittelübersicht übermitteln wir Ihnen umgehend nach Zahlungseingang.',
+  energieausweis: 'Den Energieausweis gem. GEG 2023 stellen wir aus und übermitteln ihn Ihnen umgehend nach Zahlungseingang. Die Eintragung in die Energieausweisdatenbank erfolgt zeitgleich.',
+  baubegleitung: 'Die abschließende Dokumentation der Baubegleitung gem. KfW BEG inkl. aller Nachweise und Bestätigungen übermitteln wir Ihnen umgehend nach Zahlungseingang.',
+  alle: 'Sämtliche Unterlagen, Berechnungen, Berichte und Nachweise übermitteln wir Ihnen umgehend nach Zahlungseingang digital. Bei Fragen stehen wir Ihnen jederzeit gerne zur Verfügung.'
 };
 
 function applyBaustein(){
   const sel = document.getElementById('d-baustein');
   if(!sel || !sel.value) return;
   
-  const hinwEl = document.getElementById('d-hinw');
-  if(!hinwEl) return;
+  // In Anschreiben einfügen - am Ende des bestehenden Textes
+  const anschEl = document.getElementById('d-ansch');
+  if(!anschEl) return;
   
   const baustein = BAUSTEINE[sel.value] || '';
-  const aktuell = hinwEl.value.trim();
+  const aktuell = anschEl.value.trim();
   
-  // Baustein anhängen oder ersetzen
-  if(aktuell && !aktuell.includes('Übermittlung') && !aktuell.includes('übermittelt')){
-    // Bestehender Text + Baustein
-    hinwEl.value = aktuell + '\n\n' + baustein;
+  // Letzten Satz des Anschreibens ersetzen oder anhängen
+  if(aktuell){
+    // Prüfe ob letzter Satz "Bei Rückfragen..." ist - dann davor einfügen
+    const lines = aktuell.split('\n');
+    const lastLine = lines[lines.length-1].trim();
+    if(lastLine.startsWith('Bei') || lastLine.startsWith('Wir bedanken')){
+      lines.splice(lines.length-1, 0, baustein);
+      anschEl.value = lines.join('\n');
+    } else {
+      anschEl.value = aktuell + '\n' + baustein;
+    }
   } else {
-    // Nur Baustein
-    hinwEl.value = baustein;
+    anschEl.value = baustein;
   }
   
-  // Dropdown zurücksetzen
   sel.value = '';
-  
-  // Hinweis-Textfeld fokussieren zum direkten Bearbeiten
-  hinwEl.focus();
-  hinwEl.setSelectionRange(hinwEl.value.length, hinwEl.value.length);
-  
-  toast('Baustein eingefügt – du kannst ihn direkt bearbeiten!', 's');
+  anschEl.focus();
+  toast('Unterlagen-Hinweis ins Anschreiben eingefügt!', 's');
 }
 
 // ── INFO-BAUSTEINE FÖRDERUNG ─────────────────────
