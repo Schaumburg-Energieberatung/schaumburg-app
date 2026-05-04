@@ -2017,7 +2017,7 @@ function prevDoc(type,id){
       <div class="dtw">
         <table class="dtbl">
           <thead><tr>
-            <th style="width:28px">#</th>
+            <th style="width:35px">Pos.</th>
             <th>Leistungsbeschreibung</th>
             <th style="width:50px;text-align:center">Menge</th>
             <th style="width:60px;text-align:center">Einheit</th>
@@ -2087,7 +2087,8 @@ function prevDoc(type,id){
   if(!isA && C.iban){
     setTimeout(function(){
       const el = document.getElementById('qr-div-'+(d.id||'x'));
-      if(!el || el.children.length > 0) return;
+      if(!el) return;
+      if(el.children.length > 0) return;
       const epc = [
         'BCD','002','1','SCT',
         C.bic||'',
@@ -2442,7 +2443,7 @@ async function loadKundenDoc(typ, docId){
       <div class="dtw">
         <table class="dtbl">
           <thead><tr>
-            <th style="width:28px">#</th>
+            <th style="width:35px">Pos.</th>
             <th>Leistungsbeschreibung</th>
             <th style="width:50px;text-align:center">Menge</th>
             <th style="width:60px;text-align:center">Einheit</th>
@@ -3240,15 +3241,20 @@ window.addEventListener('load', function(){
   // QR-Code vor dem Drucken als img sichern
   window.addEventListener('beforeprint', function(){
     document.querySelectorAll('div[id^="qr-div-"]').forEach(function(div){
+      // qrcodejs erstellt canvas innerhalb des divs
       var canvas = div.querySelector('canvas');
-      if(canvas){
-        var img = document.createElement('img');
-        img.src = canvas.toDataURL('image/png');
-        img.style.width = '70px';
-        img.style.height = '70px';
-        img.style.flexShrink = '0';
-        div.innerHTML = '';
-        div.appendChild(img);
+      if(canvas && canvas.width > 0){
+        try{
+          var dataUrl = canvas.toDataURL('image/png');
+          var img = document.createElement('img');
+          img.src = dataUrl;
+          img.style.cssText = 'width:62px;height:62px;display:block;flex-shrink:0';
+          div.innerHTML = '';
+          div.appendChild(img);
+        }catch(e){
+          // CORS Fehler - zeige Canvas direkt (kann trotzdem gedruckt werden)
+          console.log('beforeprint QR:', e);
+        }
       }
     });
   });
