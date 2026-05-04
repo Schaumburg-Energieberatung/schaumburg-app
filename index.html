@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1262,6 +1261,74 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 <div class="toast" id="toast"></div>
 
 <script>
+
+// QR Code Generator - nutzt Canvas direkt
+function generateQRCode(canvas, text, size, darkColor, lightColor) {
+  if(!canvas) return;
+  size = size || 70;
+  darkColor = darkColor || '#0D3B36';
+  lightColor = lightColor || '#F7F9F8';
+  
+  // Erstelle ein temporäres img Element
+  var img = document.createElement('img');
+  var encodedData = encodeURIComponent(text);
+  
+  // Versuche mehrere QR APIs
+  var apis = [
+    'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&data=' + encodedData + '&ecc=M&format=png',
+    'https://chart.googleapis.com/chart?chs=' + size + 'x' + size + '&cht=qr&chl=' + encodedData
+  ];
+  
+  var apiIndex = 0;
+  
+  function tryNext() {
+    if(apiIndex >= apis.length) {
+      // Alle APIs fehlgeschlagen - zeige Text
+      canvas.width = size; canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = lightColor; ctx.fillRect(0,0,size,size);
+      ctx.fillStyle = darkColor; ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('IBAN:', size/2, size/2-8);
+      ctx.font = '6px sans-serif';
+      var iban = text.split('\n')[6] || '';
+      ctx.fillText(iban.substring(0,10), size/2, size/2+4);
+      return;
+    }
+    img.src = apis[apiIndex++];
+  }
+  
+  img.crossOrigin = 'anonymous';
+  img.onload = function() {
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    try {
+      ctx.drawImage(img, 0, 0, size, size);
+    } catch(e) {
+      // CORS Fehler - versuche nächste API
+      tryNext();
+    }
+  };
+  img.onerror = function() { tryNext(); };
+  
+  tryNext();
+}
+
+// Kompatibilität mit bestehendem Code
+var QRCode = {
+  toCanvas: function(canvas, text, opts, cb) {
+    var size = opts && opts.width ? opts.width : 70;
+    var dark = opts && opts.color && opts.color.dark ? opts.color.dark : '#0D3B36';
+    var light = opts && opts.color && opts.color.light ? opts.color.light : '#F7F9F8';
+    generateQRCode(canvas, text, size, dark, light);
+    if(cb) setTimeout(function(){ cb(null); }, 100);
+  }
+};
+
+
+
+
+
 
 
 const firebaseConfig = {
@@ -3216,6 +3283,21 @@ window.addEventListener('load', function(){
     pwField.removeEventListener('keypress', null);
     pwField.addEventListener('keypress', function(e){ if(e.key==='Enter') doLogin(); });
   }
+  
+  // Canvas zu IMG konvertieren vor dem Drucken
+  window.addEventListener('beforeprint', function(){
+    document.querySelectorAll('canvas[id^="qr-canvas-"]').forEach(function(canvas){
+      if(canvas.width > 0){
+        var img = document.createElement('img');
+        img.src = canvas.toDataURL('image/png');
+        img.style.width = canvas.style.width || '70px';
+        img.style.height = canvas.style.height || '70px';
+        img.style.flexShrink = '0';
+        canvas.parentNode.replaceChild(img, canvas);
+      }
+    });
+  });
+  
   console.log('App bereit - Login Button registriert');
 });
 
