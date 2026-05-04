@@ -2526,55 +2526,32 @@ function doEuerExport(){
   function fmtDate(d){ if(!d)return''; try{ return new Date(d).toLocaleDateString('de-DE'); }catch(e){ return d; } }
   
   let csv = '﻿';
-  csv += 'EINNAHMEN-UEBERSCHUSS-RECHNUNG (EUeR)
-';
-  csv += (S.cfg.firma||'Schaumburg Energieberatung & Planung')+'
-';
-  csv += (S.cfg.inhaber||'Hakan Tekin')+' - Steuernummer: '+(S.cfg.steuernr||'')+'
-';
-  csv += 'Kleinunternehmer gemaess 19 Abs. 1 UStG
-';
-  csv += 'Zeitraum: '+period+'
-';
-  csv += 'Erstellt am: '+new Date().toLocaleDateString('de-DE')+'
-
-';
+  csv += 'EINNAHMEN-UEBERSCHUSS-RECHNUNG (EUeR)\n';
+  csv += (S.cfg.firma||'Schaumburg Energieberatung & Planung')+'\n';
+  csv += (S.cfg.inhaber||'Hakan Tekin')+' - Steuernummer: '+(S.cfg.steuernr||'')+'\n';
+  csv += 'Kleinunternehmer gemaess 19 Abs. 1 UStG\n';
+  csv += 'Zeitraum: '+period+'\n';
+  csv += 'Erstellt am: '+new Date().toLocaleDateString('de-DE')+'\n\n';
   
-  csv += 'EINNAHMEN (bezahlte Rechnungen)
-';
-  csv += 'Datum;Rechnungsnummer;Kunde;Beschreibung;Betrag (Euro)
-';
+  csv += 'EINNAHMEN (bezahlte Rechnungen)\n';
+  csv += 'Datum;Rechnungsnummer;Kunde;Beschreibung;Betrag (Euro)\n';
   einnahmen.forEach(function(r){
-    csv += fmtDate(r.bezahltAm||r.datum)+';'+(r.nr||'')+';'+(r.kundeName||'').replace(/;/g,' ')+';'+(r.betreff||'').replace(/;/g,' ')+';'+euro2(r.netto||r.gesamt||0)+'
-';
+    csv += fmtDate(r.bezahltAm||r.datum)+';'+(r.nr||'')+';'+(r.kundeName||'').replace(/;/g,' ')+';'+(r.betreff||'').replace(/;/g,' ')+';'+euro2(r.netto||r.gesamt||0)+'\n';
   });
-  csv += ';;Gesamt Einnahmen;;'+euro2(totalEin)+'
-
-';
+  csv += ';;Gesamt Einnahmen;;'+euro2(totalEin)+'\n\n';
   
-  csv += 'BETRIEBSAUSGABEN
-';
-  csv += 'Datum;Kategorie;Beschreibung;Beleg;Betrag (Euro)
-';
+  csv += 'BETRIEBSAUSGABEN\n';
+  csv += 'Datum;Kategorie;Beschreibung;Beleg;Betrag (Euro)\n';
   ausgaben.forEach(function(a){
-    csv += fmtDate(a.datum)+';'+(a.kat||'').replace(/;/g,' ')+';'+(a.desc||'').replace(/;/g,' ')+';'+(a.beleg||'')+';'+euro2(a.betrag||0)+'
-';
+    csv += fmtDate(a.datum)+';'+(a.kat||'').replace(/;/g,' ')+';'+(a.desc||'').replace(/;/g,' ')+';'+(a.beleg||'')+';'+euro2(a.betrag||0)+'\n';
   });
-  csv += ';;Gesamt Ausgaben;;'+euro2(totalAus)+'
-
-';
+  csv += ';;Gesamt Ausgaben;;'+euro2(totalAus)+'\n\n';
   
-  csv += 'ZUSAMMENFASSUNG
-';
-  csv += 'Einnahmen gesamt;;'+euro2(totalEin)+'
-';
-  csv += 'Ausgaben gesamt;;'+euro2(totalAus)+'
-';
-  csv += 'Gewinn/Verlust;;'+euro2(gewinn)+'
-
-';
-  csv += 'Gemaess 19 Abs. 1 UStG wird keine Umsatzsteuer berechnet und ausgewiesen.
-';
+  csv += 'ZUSAMMENFASSUNG\n';
+  csv += 'Einnahmen gesamt;;'+euro2(totalEin)+'\n';
+  csv += 'Ausgaben gesamt;;'+euro2(totalAus)+'\n';
+  csv += 'Gewinn/Verlust;;'+euro2(gewinn)+'\n\n';
+  csv += 'Gemaess 19 Abs. 1 UStG wird keine Umsatzsteuer berechnet und ausgewiesen.\n';
   
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
