@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -248,7 +248,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 .dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden;min-height:120px}
 .dl{width:auto;height:auto;max-height:130px;min-height:120px;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:stretch}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
-.dn{font-family:'Cormorant Garamond',serif;font-size:33px;color:#C9A961;font-weight:700;font-style:italic;letter-spacing:.3px;line-height:1.2}
+.dn{font-family:'Cormorant Garamond',serif;font-size:42px;color:#C9A961;font-weight:700;font-style:italic;letter-spacing:.3px;line-height:1.2}
 .ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:400;text-transform:uppercase}
 .dc{font-size:10.5px;color:rgba(255,255,255,.88);margin-top:7px;line-height:1.85}
 .dgl{height:3px;background:#C9A961}
@@ -2036,7 +2036,7 @@ function prevDoc(type,id){
       ${!isA ? `
       <div style="padding:10px 22px 8px;border-top:1px solid #EEF2F1;background:#F7F9F8;text-align:left">
         <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:18px;float:left;width:100%">
-          ${C.iban ? `<div id="qr-${d.id||'prev'}" style="width:58px;height:58px;flex-shrink:0;background:white;padding:2px"></div>` : '<div style="width:58px;height:58px;flex-shrink:0;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999">IBAN<br>fehlt</div>'}
+          ${C.iban ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&format=png&ecc=M&data=${encodeURIComponent(['BCD','002','1','SCT',C.bic||'',C.inhaber||'Hakan Tekin',(C.iban||'').replace(/\\s/g,''),'EUR'+(d.gesamt||0).toFixed(2),'',d.nr||'',''].join('\n'))}" style="width:70px;height:70px;flex-shrink:0" alt="GiroCode">` : '<div style="width:70px;height:70px;flex-shrink:0;background:#f0f0f0;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#CC0000;text-align:center">IBAN in<br>Einstellungen<br>eintragen</div>'}
           <div style="flex:0 1 auto;padding-left:4px">
             <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Zahlung per QR-Code (GiroCode)</div>
             ${C.iban ? `<div style="font-size:9px;color:#444;line-height:1.8">Scannen Sie mit Ihrer Banking-App.<br>Betrag, IBAN und Verwendungszweck werden automatisch übernommen.</div>
@@ -2067,35 +2067,7 @@ function prevDoc(type,id){
   `;
   om('m-prev');
   
-  // QR-Code für Rechnung generieren
-  if(!isA){
-    function generateQR(){
-      const docId = d.id || 'prev';
-      const qrEl = document.getElementById('qr-'+docId);
-      if(!qrEl){ return false; }
-      if(qrEl.children.length > 0){ return true; }
-      const iban = C.iban||'';
-      if(!iban){ return true; }
-      const epc = [
-        'BCD','002','1','SCT',
-        C.bic||'',
-        C.inhaber||'Hakan Tekin',
-        iban.replace(/\s/g,''),
-        'EUR'+(d.gesamt||0).toFixed(2),
-        '',d.nr||'',''
-      ].join('\n');
-      try{
-        new QRCode(qrEl, {
-          text: epc, width:58, height:58,
-          colorDark:'#0D3B36', colorLight:'#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
-        return true;
-      }catch(e){ console.log('QR Fehler:',e); return false; }
-    }
-    // Versuche mehrfach bis Element da ist
-    setTimeout(()=>{ if(!generateQR()) setTimeout(()=>{ if(!generateQR()) setTimeout(generateQR, 500); }, 300); }, 300);
-  }
+  // QR-Code wird als img direkt generiert
 }
 
 async function acceptAng(id){
