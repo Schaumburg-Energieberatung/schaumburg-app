@@ -2025,7 +2025,7 @@ function prevDoc(type,id){
       <div style="flex:1;min-height:20px"></div>
       
       <!-- QR CODE - direkt über Fußzeile, linksbündig -->
-      ${!isA && C.iban ? `
+      ${!isA ? `
       <div style="padding:10px 22px 8px;border-top:1px solid #EEF2F1;background:#F7F9F8;text-align:left">
         <div style="display:flex;align-items:flex-start;justify-content:flex-start;gap:18px;float:left;width:100%">
           <div id="qr-${d.id}" style="width:58px;height:58px;flex-shrink:0;background:white;padding:2px"></div>
@@ -2060,10 +2060,11 @@ function prevDoc(type,id){
   om('m-prev');
   
   // QR-Code für Rechnung generieren
-  if(!isA && C.iban && d.id){
+  if(!isA && d.id){
     setTimeout(()=>{
       const qrEl = document.getElementById('qr-'+d.id);
-      if(qrEl && qrEl.children.length === 0){
+      if(!qrEl){ console.log('QR Element nicht gefunden: qr-'+d.id); return; }
+      if(qrEl.children.length === 0){
         // EPC QR-Code Format (GiroCode)
         const epc = [
           'BCD',           // Service Tag
@@ -2090,7 +2091,7 @@ function prevDoc(type,id){
           });
         }catch(e){ console.log('QR:', e); }
       }
-    }, 300);
+    }, 800);
   }
 }
 
