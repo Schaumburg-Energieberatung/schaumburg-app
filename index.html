@@ -2055,13 +2055,13 @@ function prevDoc(type,id){
       <!-- FUSSZEILE - immer ganz unten -->
       <div class="dfoot">
         ${!isA && C.iban ? `
-        <div style="padding:8px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:flex-start;gap:16px;background:#F7F9F8">
-          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0;margin-top:-20px"></div>
-          <div style="padding-top:2px">
+        <div style="padding:10px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:center;gap:16px;background:#F7F9F8">
+          <div style="flex:1">
             <div style="font-size:9.5px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">📱 Bequem bezahlen per GiroCode</div>
             <div style="font-size:9px;color:#555;line-height:1.7">QR-Code mit Ihrer Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
             <div style="font-size:8.5px;color:#8FA8A4;margin-top:3px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Verwendungszweck: <b style="color:#0D3B36">${d.nr}</b></div>
           </div>
+          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0"></div>
         </div>` : ''}
         <div class="dfg">
           <div>
@@ -2466,13 +2466,13 @@ async function loadKundenDoc(typ, docId){
       <div style="flex:1"></div>
       <div class="dfoot">
         ${!isA && C.iban ? `
-        <div style="padding:8px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:flex-start;gap:16px;background:#F7F9F8">
-          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0;margin-top:-20px"></div>
-          <div style="padding-top:2px">
+        <div style="padding:10px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:center;gap:16px;background:#F7F9F8">
+          <div style="flex:1">
             <div style="font-size:9.5px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">📱 Bequem bezahlen per GiroCode</div>
             <div style="font-size:9px;color:#555;line-height:1.7">QR-Code mit Ihrer Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
             <div style="font-size:8.5px;color:#8FA8A4;margin-top:3px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Verwendungszweck: <b style="color:#0D3B36">${d.nr}</b></div>
           </div>
+          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0"></div>
         </div>` : ''}
         <div class="dfg">
           <div><div class="dfl">Kontakt</div><div class="dfv">${cfg.firma}<br>${cfg.inhaber}<br>${cfg.strasse}, ${cfg.plz} ${cfg.ort}<br>Tel.: ${cfg.tel}<br>${cfg.email}</div></div>
