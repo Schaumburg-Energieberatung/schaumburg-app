@@ -1267,11 +1267,11 @@ function goto(page,el){
   const titles={dashboard:'Dashboard',angebote:'Angebote',rechnungen:'Rechnungen',kunden:'Kunden',crm:'CRM & Aktivitäten',ausgaben:'Betriebsausgaben',leistungen:'Leistungen & Texte',foerder:'Förderrechner',settings:'Einstellungen'};
   $('tb-title').textContent=titles[page]||page;
   const acts=$('tb-acts');
-  if(page==='angebote') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;angebot&quot;)'>+ Angebot</button>";
-  else if(page==='rechnungen') acts.innerHTML="<button class='btn btn-gold' onclick='newDoc(&quot;rechnung&quot;)'>+ Rechnung</button>";
+  if(page==='angebote'){ acts.innerHTML='<button class="btn btn-gold" id="btn-neu-ang">+ Angebot</button>'; document.getElementById('btn-neu-ang').onclick=function(){newDoc('angebot');}; }
+  else if(page==='rechnungen'){ acts.innerHTML='<button class="btn btn-gold" id="btn-neu-rech">+ Rechnung</button>'; document.getElementById('btn-neu-rech').onclick=function(){newDoc('rechnung');}; }
   else if(page==='kunden') acts.innerHTML="<button class='btn btn-gold' onclick='openKunde()'>+ Kunde</button>";
   else if(page==='ausgaben') acts.innerHTML="<button class='btn btn-gold' onclick='openAusgabe()'>+ Ausgabe</button>";
-  else if(page==='crm') acts.innerHTML="<button class='btn btn-out' onclick="openAktivitaet(null,'wiedervorlage')">🔔 Aufgabe</button><button class='btn btn-gold' style='margin-left:8px' onclick='openAktivitaet()'>+ Aktivität</button>";
+    else if(page==='crm'){ acts.innerHTML='<button class="btn btn-out" id="btn-wv">🔔 Aufgabe</button><button class="btn btn-gold" style="margin-left:8px" id="btn-akt">+ Aktivität</button>'; document.getElementById('btn-wv').onclick=function(){openAktivitaet(null,'wiedervorlage');}; document.getElementById('btn-akt').onclick=function(){openAktivitaet();}; }
   else if(page==='leistungen') acts.innerHTML="<button class='btn btn-gold' onclick='openLeistung()'>+ Leistung</button>";
   else acts.innerHTML='';
 }
