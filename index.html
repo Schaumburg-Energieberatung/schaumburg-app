@@ -2047,15 +2047,23 @@ function prevDoc(type,id){
 
       <!-- SPACER - drückt alles nach unten -->
       <div style="flex:1;min-height:20px"></div>
+
+      <!-- QR CODE - direkt über Fußzeile -->
+      ${!isA && C.iban ? `
+      <div style="margin:0 22px 10px;padding:10px 14px;background:#F7F9F8;border:1px solid #EEF2F1;border-radius:8px;display:flex;align-items:center;gap:16px">
+        <div id="qr-div-${d.id||'x'}" style="width:65px;height:65px;flex-shrink:0"></div>
+        <div>
+          <div style="font-size:9.5px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">📱 Bequem bezahlen per GiroCode</div>
+          <div style="font-size:9px;color:#555;line-height:1.7">QR-Code mit Ihrer Banking-App scannen.<br>Betrag, IBAN und Rechnungsnummer werden automatisch übernommen – kein Abtippen nötig.</div>
+          <div style="font-size:8.5px;color:#8FA8A4;margin-top:4px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Verwendungszweck: <b style="color:#0D3B36">${d.nr}</b></div>
+        </div>
+      </div>` : ''}
       
 
       
       <!-- FUSSZEILE - immer ganz unten -->
       <div class="dfoot">
-        <div class="dfg" style="grid-template-columns:${!isA && C.iban ? '80px 1fr 1fr 1fr' : '1fr 1fr 1fr'}">
-          ${!isA && C.iban ? `<div style="display:flex;align-items:center;justify-content:center">
-            <div id="qr-div-${d.id||'x'}" style="width:70px;height:70px"></div>
-          </div>` : ''}
+        <div class="dfg">
           <div>
             <div class="dfl">Kontakt</div>
             <div class="dfv">${C.firma}<br>${C.inhaber}<br>${C.strasse}, ${C.plz} ${C.ort}<br>Tel.: ${C.tel}<br>${C.email}</div>
