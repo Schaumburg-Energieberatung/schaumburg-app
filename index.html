@@ -249,7 +249,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 .dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden;min-height:120px}
 .dl{width:auto;height:auto;max-height:130px;min-height:120px;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:stretch}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
-.dn{font-family:'Cormorant Garamond',serif;font-size:42px;color:#C9A961;font-weight:700;font-style:italic;letter-spacing:.3px;line-height:1.2}
+.dn{font-family:'Cormorant Garamond',serif;font-size:46px;color:#C9A961;font-weight:800;font-style:italic;letter-spacing:.3px;line-height:1.2}
 .ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:400;text-transform:uppercase}
 .dc{font-size:10.5px;color:rgba(255,255,255,.88);margin-top:7px;line-height:1.85}
 .dgl{height:3px;background:#C9A961}
@@ -331,10 +331,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
   /* QR-Code beim Drucken erzwingen */
   #prev-wrap img { display: block !important; -webkit-print-color-adjust: exact !important; }
-  #prev-wrap [style*="justify-content:flex-start"] { justify-content: flex-start !important; text-align: left !important; }
-  #prev-wrap [style*="float:left"] { float: left !important; text-align: left !important; }
-  /* QR-Code Bereich immer anzeigen */
-  #prev-wrap [style*="background:#F7F9F8"] { display: block !important; page-break-inside: avoid !important; }
+  #prev-wrap canvas { display: block !important; -webkit-print-color-adjust: exact !important; }
+  #prev-wrap [id^="qr-div-"] { display: block !important; width:60px !important; height:60px !important; }
+  #prev-wrap [id^="qr-div-"] canvas { width:60px !important; height:60px !important; }
+  #prev-wrap [id^="qr-div-"] img { width:60px !important; height:60px !important; }
   /* Alles außer Vorschau verstecken */
   body > *:not(#m-prev) { display: none !important; }
   #m-prev { 
@@ -998,6 +998,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
       <div id="tc-txt" style="display:none">
         <div class="fg" style="gap:12px">
           <div class="fld fc"><label>Anschreiben</label><textarea id="d-ansch" rows="6" placeholder="Sehr geehrte Damen und Herren,…"></textarea></div>
+          <div class="fld fc">
+            <label>Zahlungshinweis-Baustein (nur bei Rechnung)</label>
+            <select id="d-baustein" onchange="applyBaustein()" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12.5px;background:var(--g1);outline:none;width:100%;margin-bottom:6px">
+              <option value="">– Baustein wählen & in Hinweis einfügen –</option>
+              <option value="isfp">iSFP – nach Zahlung</option>
+              <option value="heizlast">Heizlastberechnung – nach Zahlung</option>
+              <option value="hydraulik">Hydraulischer Abgleich – nach Zahlung</option>
+              <option value="heizlast_hydraulik">Heizlast & Hydraul. Abgleich – nach Zahlung</option>
+              <option value="bericht">Vor-Ort-Bericht – nach Zahlung</option>
+              <option value="energieausweis">Energieausweis – nach Zahlung</option>
+              <option value="baubegleitung">Baubegleitung – Abschlussdoku nach Zahlung</option>
+              <option value="alle">Alle Unterlagen – nach Zahlung</option>
+            </select>
+          </div>
           <div class="fld fc"><label>Hinweis / AGB</label><textarea id="d-hinw" rows="4" placeholder="Dieses Angebot gilt 30 Tage…"></textarea></div>
           <div class="fld fc"><label>Interne Notiz (nicht im Dokument)</label><textarea id="d-notiz" rows="2" placeholder="Nur für dich…"></textarea></div>
         </div>
@@ -2055,13 +2069,13 @@ function prevDoc(type,id){
       <!-- FUSSZEILE - immer ganz unten -->
       <div class="dfoot">
         ${!isA && C.iban ? `
-        <div style="padding:10px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:center;gap:16px;background:#F7F9F8">
+        <div style="padding:8px 16px 8px;border-bottom:1px solid rgba(201,169,97,.2);background:#F7F9F8;display:flex;align-items:center;gap:12px">
+          <div id="qr-div-${d.id||'x'}" style="width:60px;height:60px;flex-shrink:0"></div>
           <div style="flex:1">
-            <div style="font-size:9.5px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">📱 Bequem bezahlen per GiroCode</div>
-            <div style="font-size:9px;color:#555;line-height:1.7">QR-Code mit Ihrer Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
-            <div style="font-size:8.5px;color:#8FA8A4;margin-top:3px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Verwendungszweck: <b style="color:#0D3B36">${d.nr}</b></div>
+            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">📱 Bequem bezahlen per GiroCode</div>
+            <div style="font-size:8.5px;color:#555;line-height:1.6">QR-Code mit Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
+            <div style="font-size:8px;color:#8FA8A4;margin-top:2px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Ref: <b style="color:#0D3B36">${d.nr}</b></div>
           </div>
-          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0"></div>
         </div>` : ''}
         <div class="dfg">
           <div>
@@ -2467,13 +2481,13 @@ async function loadKundenDoc(typ, docId){
       <div style="flex:1"></div>
       <div class="dfoot">
         ${!isA && C.iban ? `
-        <div style="padding:10px 16px;border-bottom:1px solid rgba(201,169,97,.2);display:flex;align-items:center;gap:16px;background:#F7F9F8">
+        <div style="padding:8px 16px 8px;border-bottom:1px solid rgba(201,169,97,.2);background:#F7F9F8;display:flex;align-items:center;gap:12px">
+          <div id="qr-div-${d.id||'x'}" style="width:60px;height:60px;flex-shrink:0"></div>
           <div style="flex:1">
-            <div style="font-size:9.5px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">📱 Bequem bezahlen per GiroCode</div>
-            <div style="font-size:9px;color:#555;line-height:1.7">QR-Code mit Ihrer Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
-            <div style="font-size:8.5px;color:#8FA8A4;margin-top:3px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Verwendungszweck: <b style="color:#0D3B36">${d.nr}</b></div>
+            <div style="font-size:9px;font-weight:700;color:#0D3B36;text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px">📱 Bequem bezahlen per GiroCode</div>
+            <div style="font-size:8.5px;color:#555;line-height:1.6">QR-Code mit Banking-App scannen – Betrag, IBAN und Rechnungsnummer werden automatisch übernommen.</div>
+            <div style="font-size:8px;color:#8FA8A4;margin-top:2px">Betrag: <b style="color:#0D3B36">${euro(d.gesamt||0)}</b> · Ref: <b style="color:#0D3B36">${d.nr}</b></div>
           </div>
-          <div id="qr-div-${d.id||'x'}" style="width:62px;height:62px;flex-shrink:0"></div>
         </div>` : ''}
         <div class="dfg">
           <div><div class="dfl">Kontakt</div><div class="dfv">${cfg.firma}<br>${cfg.inhaber}<br>${cfg.strasse}, ${cfg.plz} ${cfg.ort}<br>Tel.: ${cfg.tel}<br>${cfg.email}</div></div>
@@ -3384,6 +3398,47 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 // end
+// ── ZAHLUNGSHINWEIS BAUSTEINE ────────────────────
+const BAUSTEINE = {
+  isfp: 'Die Übermittlung des individuellen Sanierungsfahrplans (iSFP) erfolgt nach Eingang der vollständigen Zahlung. Mit der Erstellung des iSFP wurde vereinbarungsgemäß bereits begonnen.',
+  heizlast: 'Die Übermittlung der Heizlastberechnung gem. DIN EN 12831-1 inkl. aller Berechnungsunterlagen erfolgt nach Eingang der vollständigen Zahlung.',
+  hydraulik: 'Die Übermittlung des Hydraulischen Abgleichs (Verfahren B gem. VDI 2073) inkl. Einstellprotokoll erfolgt nach Eingang der vollständigen Zahlung.',
+  heizlast_hydraulik: 'Die Übermittlung der Heizlastberechnung gem. DIN EN 12831-1 sowie des Hydraulischen Abgleichs (Verfahren B gem. VDI 2073) inkl. aller Berechnungsunterlagen und Einstellprotokoll erfolgt nach Eingang der vollständigen Zahlung.',
+  bericht: 'Der vollständige Vor-Ort-Beratungsbericht inkl. Maßnahmenempfehlungen und Fördermittelübersicht wird nach Eingang der vollständigen Zahlung übermittelt.',
+  energieausweis: 'Die Ausstellung und Übermittlung des Energieausweises gem. GEG 2023 erfolgt nach Eingang der vollständigen Zahlung. Die Eintragung in die Energieausweisdatenbank erfolgt zeitgleich.',
+  baubegleitung: 'Die abschließende Dokumentation der energetischen Baubegleitung gem. KfW BEG inkl. aller erforderlichen Nachweise und Bestätigungen wird nach Eingang der vollständigen Zahlung übermittelt.',
+  alle: 'Sämtliche erstellten Unterlagen, Berechnungen, Berichte und Nachweise werden nach Eingang der vollständigen Zahlung digital übermittelt. Bei Fragen zum Zahlungsvorgang stehen wir Ihnen jederzeit gerne zur Verfügung.'
+};
+
+function applyBaustein(){
+  const sel = document.getElementById('d-baustein');
+  if(!sel || !sel.value) return;
+  
+  const hinwEl = document.getElementById('d-hinw');
+  if(!hinwEl) return;
+  
+  const baustein = BAUSTEINE[sel.value] || '';
+  const aktuell = hinwEl.value.trim();
+  
+  // Baustein anhängen oder ersetzen
+  if(aktuell && !aktuell.includes('Übermittlung') && !aktuell.includes('übermittelt')){
+    // Bestehender Text + Baustein
+    hinwEl.value = aktuell + '\n\n' + baustein;
+  } else {
+    // Nur Baustein
+    hinwEl.value = baustein;
+  }
+  
+  // Dropdown zurücksetzen
+  sel.value = '';
+  
+  // Hinweis-Textfeld fokussieren zum direkten Bearbeiten
+  hinwEl.focus();
+  hinwEl.setSelectionRange(hinwEl.value.length, hinwEl.value.length);
+  
+  toast('Baustein eingefügt – du kannst ihn direkt bearbeiten!', 's');
+}
+
 </script>
 </body>
 </html>
