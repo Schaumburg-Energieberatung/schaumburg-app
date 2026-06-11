@@ -2306,6 +2306,7 @@ async function downloadPDFjsPDF(){
       col2Lines.forEach((l,i) => pdf.text(l, col2, fy+4+(i*3.5)));
 
       const col3Lines = [
+        C.inhaber||'Hakan Tekin',
         C.bank||'VR-Bank in Südniedersachsen',
         C.iban ? 'IBAN: '+C.iban : 'IBAN: DE90 2606 2433 0000 2323 19',
         C.bic ? 'BIC: '+C.bic : 'BIC: GENODEF1DRA'
@@ -2319,30 +2320,38 @@ async function downloadPDFjsPDF(){
       pdf.setFillColor(...DK);
       pdf.rect(0, 0, pW, 36, 'F');
 
-      // Logo-Bereich links (Platzhalter grüner Block)
-      pdf.setFillColor(20,70,65);
-      pdf.rect(0, 0, 42, 36, 'F');
+      // Logo einbetten
+      const logoB64 = window._kvLogo || null;
+      if(logoB64){
+        try{
+          pdf.addImage('data:image/jpeg;base64,'+logoB64, 'JPEG', 1, 1, 38, 34);
+        }catch(e){
+          pdf.setTextColor(...GOLD);
+          pdf.setFont('helvetica','bold');
+          pdf.setFontSize(8);
+          pdf.text('Schaumburg', 4, 15);
+        }
+      } else {
+        pdf.setTextColor(...GOLD);
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(8);
+        pdf.text('Schaumburg', 4, 15);
+        pdf.setFontSize(6.5);
+        pdf.setFont('helvetica','normal');
+        pdf.setTextColor(200,191,160);
+        pdf.text('Energieberatung & Planung', 4, 20);
+      }
 
-      // Logo-Text (falls kein Bild)
-      pdf.setTextColor(...GOLD);
-      pdf.setFont('helvetica','bold');
-      pdf.setFontSize(8);
-      pdf.text('Schaumburg', 4, 15);
-      pdf.setFontSize(6.5);
-      pdf.setFont('helvetica','normal');
-      pdf.setTextColor(200,191,160);
-      pdf.text('Energieberatung & Planung', 4, 20);
-
-      // Firmenname rechts (kleiner als vorher!)
+      // Firmenname rechts
       pdf.setTextColor(...GOLD);
       pdf.setFont('helvetica','bolditalic');
-      pdf.setFontSize(18); // war 53px → jetzt 18
-      pdf.text(C.firma||'Schaumburg Energieberatung & Planung', pW-ml, 16, {align:'right'});
+      pdf.setFontSize(16);
+      pdf.text(C.firma||'Schaumburg Energieberatung & Planung', pW-ml, 14, {align:'right'});
 
       pdf.setFont('helvetica','normal');
       pdf.setFontSize(6.5);
       pdf.setTextColor(200,191,160);
-      pdf.text('ENERGIEBERATUNG & PLANUNG', pW-ml, 21, {align:'right'});
+      pdf.text('ENERGIEBERATUNG & PLANUNG', pW-ml, 20, {align:'right'});
 
       pdf.setFontSize(7);
       pdf.setTextColor(220,210,180);
@@ -2526,7 +2535,7 @@ async function downloadPDFjsPDF(){
     let sy = y + 6;
     pdf.setFont('helvetica','normal');
     pdf.setFontSize(8);
-    pdf.setTextColor(201,169,97,0.8);
+    pdf.setTextColor(201,169,97);
     pdf.text('Netto:', sumBoxX+3, sy);
     pdf.setTextColor(...WHITE);
     pdf.text(euro(d.netto||0), sumBoxX+sumBoxW-3, sy, {align:'right'});
@@ -2610,7 +2619,7 @@ async function downloadPDFjsPDF(){
           pdf.setFont('helvetica','bold');
           pdf.setFontSize(7.5);
           pdf.setTextColor(...DK);
-          pdf.text('📱 Bequem bezahlen per GiroCode', ml+22, y+6);
+          pdf.text('Bequem bezahlen per GiroCode', ml+22, y+6);
           pdf.setFont('helvetica','normal');
           pdf.setFontSize(7);
           pdf.setTextColor(80,80,80);
