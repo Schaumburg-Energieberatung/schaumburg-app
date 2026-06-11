@@ -2234,66 +2234,401 @@ async function exportBackup(){
 // ── PDF EXPORT via html2canvas ─────────────
 async function downloadPDFjsPDF(){
   if(!prevRef){ toast('Keine Vorschau offen','e'); return; }
-
-  const wrap = document.getElementById('prev-wrap');
-  if(!wrap){ toast('Vorschau nicht gefunden','e'); return; }
-
-  // Sicherstellen dass QR-Code gerendert ist
-  const qrDiv = wrap.querySelector('[id^="qr-div-"]');
-  if(qrDiv && qrDiv.children.length === 0){
-    // QR noch nicht gerendert - kurz warten
-    await new Promise(r=>setTimeout(r,600));
-  }
-
   toast('PDF wird erstellt…');
 
   try{
     const {jsPDF} = window.jspdf;
+    const d = prevRef.doc;
+    const isA = prevRef.type==='angebot';
+    const k = d.kundeData||{};
+    const C = S.cfg;
 
-    // Buttons temporär ausblenden (no-print Elemente)
-    const noPrint = document.querySelectorAll('.no-print, .mf, .mh');
-    noPrint.forEach(el=>el.style.display='none');
-
-    const canvas = await html2canvas(wrap, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: wrap.scrollWidth,
-      height: wrap.scrollHeight
-    });
-
-    // Buttons wieder einblenden
-    noPrint.forEach(el=>el.style.display='');
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pW = 210; // Seitenbreite
+    const pH = 297; // Seitenhöhe
+    const ml = 14;  // Margin links
+    const mr = 14;  // Margin rechts
+    const cW = pW - ml - mr; // Content-Breite
+    const footH = 28; // Fußzeilen-Höhe
+    const footY = pH - footH; // Fußzeilen-Y-Position
 
-    const pdfW = 210;
-    const pdfH = 297;
-    const imgW = canvas.width;
-    const imgH = canvas.height;
+    const euro = n => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n||0);
+    const fmtD = d => { if(!d)return'–'; try{return new Date(d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}catch(e){return d}};
 
-    // Seitenverhältnis berechnen
-    const ratio = pdfW / imgW;
-    const scaledH = imgH * ratio;
+    // Farben
+    const DK = [13,59,54];       // #0D3B36
+    const GOLD = [201,169,97];   // #C9A961
+    const WHITE = [255,255,255];
+    const GRAY = [143,168,164];  // #8FA8A4
+    const LIGHTGRAY = [238,242,241]; // #EEF2F1
+    const DARKTEXT = [33,33,33];
 
-    if(scaledH <= pdfH){
-      // Alles auf eine Seite
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, scaledH);
-    } else {
-      // Mehrere Seiten
-      let yPos = 0;
-      while(yPos < scaledH){
-        if(yPos > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, -yPos, pdfW, scaledH);
-        yPos += pdfH;
-      }
+    // ── FUSSZEILE FUNKTION (wird auf jeder Seite aufgerufen) ──
+    function drawFooter(){
+      // Goldene Linie oben
+      pdf.setFillColor(...GOLD);
+      pdf.rect(0, footY, pW, 0.8, 'F');
+
+      // Fußzeilen-Hintergrund weiß
+      pdf.setFillColor(255,255,255);
+      pdf.rect(0, footY+0.8, pW, footH, 'F');
+
+      const fy = footY + 7;
+      const col1 = ml;
+      const col2 = ml + cW/3;
+      const col3 = ml + (cW/3)*2;
+
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(...DK);
+      pdf.text('KONTAKT', col1, fy);
+      pdf.text('STEUER', col2, fy);
+      pdf.text('BANK', col3, fy);
+
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(80,80,80);
+
+      const col1Lines = [
+        C.firma||'Schaumburg Energieberatung & Planung',
+        C.inhaber||'Hakan Tekin',
+        (C.strasse||'Ringstraße 18A')+', '+(C.plz||'31698')+' '+(C.ort||'Lindhorst'),
+        'Tel.: '+(C.tel||'0170 89 04 252'),
+        C.email||'info@schaumburg-energieberatung.de'
+      ];
+      col1Lines.forEach((l,i) => pdf.text(l, col1, fy+4+(i*3.5)));
+
+      const col2Lines = [
+        'Steuernummer: '+(C.steuernr||'89/461/235096'),
+        C.finanzamt ? 'Finanzamt: '+C.finanzamt : '',
+        '§ 19 UStG – Kleinunternehmer'
+      ].filter(Boolean);
+      col2Lines.forEach((l,i) => pdf.text(l, col2, fy+4+(i*3.5)));
+
+      const col3Lines = [
+        C.bank||'VR-Bank in Südniedersachsen',
+        C.iban ? 'IBAN: '+C.iban : 'IBAN: DE90 2606 2433 0000 2323 19',
+        C.bic ? 'BIC: '+C.bic : 'BIC: GENODEF1DRA'
+      ];
+      col3Lines.forEach((l,i) => pdf.text(l, col3, fy+4+(i*3.5)));
     }
 
-    const d = prevRef.doc;
-    const k = d.kundeData||{};
+    // ── HEADER FUNKTION ──
+    function drawHeader(){
+      // Grüner Header-Balken
+      pdf.setFillColor(...DK);
+      pdf.rect(0, 0, pW, 36, 'F');
+
+      // Logo-Bereich links (Platzhalter grüner Block)
+      pdf.setFillColor(20,70,65);
+      pdf.rect(0, 0, 42, 36, 'F');
+
+      // Logo-Text (falls kein Bild)
+      pdf.setTextColor(...GOLD);
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(8);
+      pdf.text('Schaumburg', 4, 15);
+      pdf.setFontSize(6.5);
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(200,191,160);
+      pdf.text('Energieberatung & Planung', 4, 20);
+
+      // Firmenname rechts (kleiner als vorher!)
+      pdf.setTextColor(...GOLD);
+      pdf.setFont('helvetica','bolditalic');
+      pdf.setFontSize(18); // war 53px → jetzt 18
+      pdf.text(C.firma||'Schaumburg Energieberatung & Planung', pW-ml, 16, {align:'right'});
+
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(200,191,160);
+      pdf.text('ENERGIEBERATUNG & PLANUNG', pW-ml, 21, {align:'right'});
+
+      pdf.setFontSize(7);
+      pdf.setTextColor(220,210,180);
+      const kontakt = (C.inhaber||'Hakan Tekin')+'  ·  '+(C.strasse||'Ringstraße 18A')+', '+(C.plz||'31698')+' '+(C.ort||'Lindhorst')+'  ·  Tel.: '+(C.tel||'0170 89 04 252')+'  ·  '+(C.email||'');
+      pdf.text(kontakt, pW-ml, 27, {align:'right'});
+
+      // Goldene Linie unter Header
+      pdf.setFillColor(...GOLD);
+      pdf.rect(0, 36, pW, 1, 'F');
+    }
+
+    // ── SEITE 1 ZEICHNEN ──
+    drawHeader();
+
+    let y = 42; // Start-Y nach Header
+
+    // Absenderzeile
+    pdf.setFontSize(6.5);
+    pdf.setFont('helvetica','normal');
+    pdf.setTextColor(...GRAY);
+    pdf.text((C.firma||'Schaumburg Energieberatung & Planung')+' · '+(C.strasse||'')+' · '+(C.plz||'')+' '+(C.ort||''), ml, y);
+    y += 6;
+
+    // Empfänger + Infotabelle nebeneinander
+    const empfX = ml;
+    const infoX = ml + cW*0.55;
+
+    // Empfänger
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica','bold');
+    pdf.setTextColor(...DARKTEXT);
+    const empfName = (k.vn||'')+' '+(k.nn||d.kundeName||'');
+    pdf.text(empfName, empfX, y+2);
+
+    pdf.setFont('helvetica','normal');
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(80,80,80);
+    let empfY = y+7;
+    if(k.firma){ pdf.text(k.firma, empfX, empfY); empfY+=4; }
+    if(k.str){ pdf.text(k.str, empfX, empfY); empfY+=4; }
+    if(k.plz||k.ort){ pdf.text((k.plz||'')+' '+(k.ort||''), empfX, empfY); empfY+=4; }
+    if(k.tel){ pdf.text('Tel.: '+k.tel, empfX, empfY); empfY+=4; }
+    if(k.mail){ pdf.text(k.mail, empfX, empfY); empfY+=4; }
+
+    // Info-Tabelle rechts
+    const infoRows = [
+      [isA?'Angebotsnr.:':'Rechnungsnr.:', d.nr||''],
+      ['Datum:', fmtD(d.datum)],
+      [isA?'Gültig bis:':'Fällig bis:', fmtD(d.datum2)],
+      ['Bearbeiter:', C.inhaber||'Hakan Tekin']
+    ];
+    let infoY = y+2;
+    infoRows.forEach(([label,val])=>{
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...GRAY);
+      pdf.text(label, infoX, infoY);
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(...DARKTEXT);
+      pdf.text(val, infoX+32, infoY);
+      infoY += 5;
+    });
+
+    y = Math.max(empfY, infoY) + 5;
+
+    // Trennlinie
+    pdf.setDrawColor(...LIGHTGRAY);
+    pdf.setLineWidth(0.3);
+    pdf.line(ml, y, pW-mr, y);
+    y += 6;
+
+    // Dokumenttyp-Titel
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(16);
+    pdf.setTextColor(...DK);
+    pdf.text(isA?'ANGEBOT':'RECHNUNG', ml, y);
+    y += 2;
+
+    // Goldene Linie
+    pdf.setFillColor(...GOLD);
+    pdf.rect(ml, y, cW, 0.8, 'F');
+    y += 5;
+
+    // Betreff
+    if(d.betreff){
+      pdf.setFillColor(245,237,216);
+      pdf.rect(ml, y, cW, 7, 'F');
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(...DK);
+      pdf.text('Betreff: '+d.betreff, ml+3, y+4.5);
+      y += 11;
+    }
+
+    // Anschreiben
+    if(d.ansch){
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(60,60,60);
+      const anschLines = pdf.splitTextToSize(d.ansch, cW);
+      // Max 8 Zeilen Anschreiben im PDF
+      const maxAnsch = Math.min(anschLines.length, 8);
+      pdf.text(anschLines.slice(0, maxAnsch), ml, y);
+      y += maxAnsch * 4 + 4;
+    }
+
+    // ── POSITIONS-TABELLE ──
+    // Tabellen-Header
+    pdf.setFillColor(...DK);
+    pdf.rect(ml, y, cW, 7, 'F');
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(...GOLD);
+    pdf.text('Pos.', ml+2, y+4.5);
+    pdf.text('Leistungsbeschreibung', ml+12, y+4.5);
+    pdf.text('Menge', ml+cW-55, y+4.5, {align:'right'});
+    pdf.text('Einheit', ml+cW-42, y+4.5, {align:'right'});
+    pdf.text('EP (€)', ml+cW-22, y+4.5, {align:'right'});
+    pdf.text('Summe (€)', ml+cW, y+4.5, {align:'right'});
+    y += 7;
+
+    // Positionen
+    const positionen = (d.pos||[]).filter(p=>p.desc&&p.desc.trim()&&p.desc!=='– Auswählen –'&&p.desc!=='– Eigene Beschreibung –');
+    positionen.forEach((p,i)=>{
+      const even = i%2===0;
+      // Zeilenhöhe dynamisch (lange Beschreibungen)
+      const descLines = pdf.splitTextToSize(p.desc||'', cW-65);
+      const rowH = Math.max(7, descLines.length * 4 + 3);
+
+      if(even){
+        pdf.setFillColor(247,249,248);
+        pdf.rect(ml, y, cW, rowH, 'F');
+      }
+
+      pdf.setDrawColor(...LIGHTGRAY);
+      pdf.setLineWidth(0.2);
+      pdf.line(ml, y+rowH, ml+cW, y+rowH);
+
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(...DK);
+      pdf.text(String(i+1), ml+2, y+rowH/2+1.5);
+
+      pdf.setFont('helvetica','normal');
+      pdf.setTextColor(40,40,40);
+      pdf.text(descLines, ml+12, y+4);
+
+      pdf.setTextColor(80,80,80);
+      pdf.text(String(p.menge||1), ml+cW-55, y+rowH/2+1.5, {align:'right'});
+      pdf.text(p.einheit||'Pauschal', ml+cW-42, y+rowH/2+1.5, {align:'right'});
+      pdf.text(p.ep>0?euro(p.ep):'–', ml+cW-22, y+rowH/2+1.5, {align:'right'});
+      pdf.setFont('helvetica','bold');
+      pdf.setTextColor(...DK);
+      pdf.text(p.summe>0?euro(p.summe):'–', ml+cW, y+rowH/2+1.5, {align:'right'});
+
+      y += rowH;
+    });
+
+    y += 4;
+
+    // ── SUMMEN-BOX ──
+    const sumBoxW = 70;
+    const sumBoxX = pW - mr - sumBoxW;
+    const sumBoxH = d.mwst ? 28 : 22;
+
+    // Prüfen ob Summenbox + QR + Hinweis + Fußzeile noch Platz haben
+    // QR-Box: ~22mm, Hinweis: ~10mm, Abstand: 5mm
+    const neededSpace = sumBoxH + (C.iban&&!isA ? 25 : 0) + 15 + footH + 5;
+    if(y + neededSpace > pH){
+      // Neue Seite
+      drawFooter();
+      pdf.addPage();
+      drawHeader();
+      drawFooter();
+      y = 42;
+    }
+
+    pdf.setFillColor(...DK);
+    pdf.rect(sumBoxX, y, sumBoxW, sumBoxH, 'F');
+
+    let sy = y + 6;
+    pdf.setFont('helvetica','normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(201,169,97,0.8);
+    pdf.text('Netto:', sumBoxX+3, sy);
+    pdf.setTextColor(...WHITE);
+    pdf.text(euro(d.netto||0), sumBoxX+sumBoxW-3, sy, {align:'right'});
+    sy += 5;
+
+    if(d.mwst){
+      pdf.setTextColor(201,169,97);
+      pdf.text('zzgl. 19% MwSt:', sumBoxX+3, sy);
+      pdf.setTextColor(...WHITE);
+      pdf.text(euro(d.mwstB||0), sumBoxX+sumBoxW-3, sy, {align:'right'});
+      sy += 5;
+    }
+
+    // Trennlinie in Box
+    pdf.setDrawColor(201,169,97,0.3);
+    pdf.setLineWidth(0.3);
+    pdf.line(sumBoxX+2, sy-1, sumBoxX+sumBoxW-2, sy-1);
+    sy += 2;
+
+    pdf.setFont('helvetica','bold');
+    pdf.setFontSize(9);
+    pdf.setTextColor(...GOLD);
+    pdf.text('GESAMTBETRAG:', sumBoxX+3, sy);
+    pdf.setFontSize(11);
+    pdf.text(euro(d.gesamt||0), sumBoxX+sumBoxW-3, sy, {align:'right'});
+
+    y += sumBoxH + 4;
+
+    // §19 Hinweis
+    if(!d.mwst){
+      pdf.setFillColor(245,237,216);
+      pdf.rect(ml, y, cW, 8, 'F');
+      pdf.setFont('helvetica','italic');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(93,64,55);
+      pdf.text('Gemäß § 19 Abs. 1 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet und ausgewiesen.', ml+3, y+4.5);
+      y += 12;
+    }
+
+    // Zahlungshinweis
+    if(d.hinw){
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(80,80,80);
+      const hinwLines = pdf.splitTextToSize(d.hinw, cW);
+      const maxHinw = Math.min(hinwLines.length, 6);
+      pdf.text(hinwLines.slice(0, maxHinw), ml, y);
+      y += maxHinw * 3.5 + 4;
+    }
+
+    // ── QR-CODE (nur Rechnungen, wenn IBAN vorhanden) ──
+    if(!isA && C.iban){
+      // Prüfen ob QR noch auf diese Seite passt
+      if(y + 22 > footY - 2){
+        drawFooter();
+        pdf.addPage();
+        drawHeader();
+        drawFooter();
+        y = 42;
+      }
+
+      // QR-Code per Canvas generieren
+      try{
+        const qrDiv = document.getElementById('qr-div-'+(d.id||'x'));
+        let qrCanvas = null;
+        if(qrDiv) qrCanvas = qrDiv.querySelector('canvas');
+
+        if(qrCanvas){
+          const qrData = qrCanvas.toDataURL('image/png');
+          // QR-Box Hintergrund
+          pdf.setFillColor(247,249,248);
+          pdf.rect(ml, y, cW, 22, 'F');
+          pdf.setDrawColor(...GOLD);
+          pdf.setLineWidth(0.3);
+          pdf.rect(ml, y, cW, 22, 'S');
+
+          // QR Bild
+          pdf.addImage(qrData, 'PNG', ml+3, y+3, 16, 16);
+
+          // QR Text
+          pdf.setFont('helvetica','bold');
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(...DK);
+          pdf.text('📱 Bequem bezahlen per GiroCode', ml+22, y+6);
+          pdf.setFont('helvetica','normal');
+          pdf.setFontSize(7);
+          pdf.setTextColor(80,80,80);
+          pdf.text('QR-Code mit Banking-App scannen – Betrag, IBAN und Rechnungsnummer', ml+22, y+10.5);
+          pdf.text('werden automatisch übernommen.', ml+22, y+14);
+          pdf.setFontSize(6.5);
+          pdf.setTextColor(...GRAY);
+          pdf.text('Betrag: '+euro(d.gesamt||0)+'  ·  Ref: '+(d.nr||''), ml+22, y+18.5);
+
+          y += 26;
+        }
+      }catch(qrErr){ console.log('QR im PDF:', qrErr); }
+    }
+
+    // ── FUSSZEILE ZEICHNEN ──
+    drawFooter();
+
+    // ── SPEICHERN ──
     const fname = `${d.nr||'Dokument'}-${k.nn||d.kundeName||'Kunde'}.pdf`.replace(/[^a-zA-Z0-9äöüÄÖÜß._-]/g,'-');
     pdf.save(fname);
     toast('✅ PDF gespeichert: '+fname, 's');
@@ -2301,8 +2636,6 @@ async function downloadPDFjsPDF(){
   }catch(err){
     console.error('PDF Fehler:', err);
     toast('PDF Fehler: '+err.message,'e');
-    // Buttons wieder einblenden falls Fehler
-    document.querySelectorAll('.no-print, .mf, .mh').forEach(el=>el.style.display='');
   }
 }
 
