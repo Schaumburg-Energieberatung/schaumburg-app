@@ -728,6 +728,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
                 <option value="850">Mehrfamilienhaus ab 3 WE (max. 850 €)</option>
               </select>
             </div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <input type="checkbox" id="bweg" onchange="cBafa()" style="width:16px;height:16px">
+              <label for="bweg" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">WEG-Bonus +250 € (iSFP-Vorstellung in Eigentümerversammlung)</label>
+            </div>
           </div>
           <div style="background:var(--dk);border-radius:var(--r);padding:14px">
             <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="color:rgba(201,169,97,.8)">Förderquote:</span><b style="color:white">50 %</b></div>
@@ -753,31 +757,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
             </div>
             <div class="fld fc"><label>Maßnahme</label>
               <select id="em" onchange="cBeg()" style="padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--g1);outline:none;width:100%">
-                <option value="30">Heizungstausch Wärmepumpe – 30%</option>
-                <option value="30">Heizungstausch Biomasse – 30%</option>
-                <option value="20">Solarthermie – 20%</option>
                 <option value="15">Gebäudehülle / Dämmung – 15%</option>
                 <option value="15">Fenster & Türen – 15%</option>
                 <option value="15">Lüftungsanlage – 15%</option>
                 <option value="15">Sommerlicher Wärmeschutz – 15%</option>
+                <option value="15">Heizungsoptimierung – 15%</option>
+                <option value="15">Solarthermie – 15%</option>
+                <option value="15">Anlagentechnik (kein Heizungstausch) – 15%</option>
+                <option value="50">Fachplanung & Baubegleitung – 50%</option>
               </select>
             </div>
-            <div style="display:flex;align-items:center;gap:7px">
-              <input type="checkbox" id="ek" onchange="cBeg()" style="width:16px;height:16px">
-              <label for="ek" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">Klima-Geschwindigkeitsbonus +20%</label>
-            </div>
+            <div style="font-size:11px;color:var(--gold);padding:4px 0">⚠️ Heizungstausch → KfW 458 (separater Rechner)</div>
             <div style="display:flex;align-items:center;gap:7px">
               <input type="checkbox" id="eisfp" onchange="cBeg()" style="width:16px;height:16px">
-              <label for="eisfp" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">iSFP-Bonus +5%</label>
-            </div>
-            <div id="ek-nat-row" style="display:none;align-items:center;gap:7px">
-              <input type="checkbox" id="ek-nat" onchange="cBeg()" style="width:16px;height:16px">
-              <label for="ek-nat" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">Effizienzbonus – natürl. Kältemittel (z.B. Propan R290) oder Wärmequelle Wasser/Erdreich/Abwasser +5%</label>
+              <label for="eisfp" style="font-size:12.5px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">iSFP-Bonus +5% (förderfähige Kosten steigen auf 60.000 €)</label>
             </div>
           </div>
           <div style="background:var(--dk);border-radius:var(--r);padding:14px">
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="color:rgba(201,169,97,.8)">Förderquote gesamt:</span><b id="eq" style="color:white">30%</b></div>
-            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="color:rgba(201,169,97,.8)">Max. förderfähige Kosten:</span><b style="color:white">60.000 €</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="color:rgba(201,169,97,.8)">Förderquote gesamt:</span><b id="eq" style="color:white">15%</b></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="color:rgba(201,169,97,.8)">Max. förderfähige Kosten:</span><b id="efk" style="color:white">30.000 €</b></div>
             <div style="height:1px;background:rgba(201,169,97,.3);margin:8px 0"></div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
               <span style="color:#C9A961;font-weight:700">✅ Förderung:</span>
@@ -877,7 +875,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
           ⚠️ <b>Wichtige Hinweise:</b><br>
           • BAFA-Förderung muss <b>VOR</b> Beauftragung beantragt werden<br>
           • KfW-Antrag muss <b>VOR</b> Baubeginn gestellt werden<br>
-          • Förderhöhen können sich ändern – Stand: 2025<br>
+          • Förderhöhen können sich ändern – Stand: Juni 2026<br>
+          • BAFA zahlt seit April 2025 direkt an den Eigentümer (keine Abtretung mehr möglich)<br>
+          • Heizungstausch: KfW 458 (nicht BEG EM) – max. 70 % Förderung, 30.000 € förderfähige Kosten<br>
           • Ich übernehme die Antragstellung auf Wunsch für Sie
         </div>
       </div>
@@ -1380,8 +1380,8 @@ const S = {
     plz:'31698', ort:'Lindhorst', tel:'0170 89 04 252',
     email:'info@schaumburg-energieberatung.de', steuernr:'89/461/235096',
     iban:'', bic:'', bank:'', mwst:false,
-    atext:'Sehr geehrte Damen und Herren,\n\nvielen Dank für Ihr Interesse. Anbei erhalten Sie unser Angebot für die Energieberatung Ihres Objektes.\n\nFörderhinweis:\nDie Kosten für die Energieberatung sind förderfähig. Das BAFA (Bundesamt für Wirtschaft und Ausfuhrkontrolle) bezuschusst die Energieberatung mit 50 % der förderfähigen Beratungskosten – maximal 650 € bei Ein- und Zweifamilienhäusern bzw. 850 € bei Mehrfamilienhäusern (ab 3 Wohneinheiten). Der Antrag muss vor Beauftragung gestellt werden.\n\nAuf Wunsch begleiten wir Sie bei der Antragstellung. Gerne informieren wir Sie auch über weiterführende Förderprogramme der KfW (Kreditanstalt für Wiederaufbau) für energetische Sanierungsmaßnahmen.\n\nBei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.',
-    ahinw:'Dieses Angebot ist freibleibend und gilt 30 Tage ab Ausstellungsdatum.\n\nWichtig: Der BAFA-Förderantrag muss zwingend vor Auftragserteilung gestellt werden. Nach Antragstellung kann die Beauftragung erfolgen. Gerne übernehmen wir auf Wunsch die Antragstellung für Sie sowie die energetische Baubegleitung gemäß KfW-Anforderungen (BEG).\n\nMit Auftragserteilung gelten unsere AGB.',
+    atext:'Sehr geehrte/r [Anrede],\n\nvielen Dank für Ihr Interesse. Anbei erhalten Sie unser Angebot für die geförderte Energieberatung mit individuellem Sanierungsfahrplan (iSFP) für Ihr Objekt.\n\nWas Sie erhalten:\nIm Rahmen der Energieberatung erstellen wir für Sie einen individuellen Sanierungsfahrplan (iSFP) gemäß BAFA-Richtlinie inkl. 3D-Gebäudemodellierung und stufenweiser Maßnahmenplanung. Wir übernehmen vollständig die Antragstellung beim BAFA vor Beauftragung.\n\nIhre Förderung:\nDas BAFA bezuschusst 50 % des Beratungshonorars – bei Ein- und Zweifamilienhäusern bis zu 650 Euro.\n\nIhr Vorteil durch den iSFP:\nSetzen Sie Maßnahmen innerhalb von 15 Jahren um, erhalten Sie bei der BEG EM einen zusätzlichen iSFP-Bonus von 5 % auf alle geförderten Einzelmaßnahmen.\n\nWichtig: Der Antrag muss vor Beginn der Beratung beim BAFA eingereicht werden. Eine nachträgliche Förderung ist nicht möglich.\n\nZUSATZLEISTUNG 1 – Fachplanung und Baubegleitung BEG EM / BAFA (optional)\nAuf Wunsch begleiten wir Sie als eingetragener EEE bei der Umsetzung Ihrer Maßnahmen:\n– TPB – Erstellung vor Antragstellung beim BAFA\n– Baubegleitung vor Ort während der Maßnahme\n– TPN – Abschlussnachweis nach Fertigstellung\nHonorar: ab 1.000 Euro – zu 50 % förderfähig, Eigenanteil ab 500 Euro.\n\nZUSATZLEISTUNG 2 – KfW 458 Heizungstausch (optional)\nWir erstellen BzA vor Antragstellung und BnD nach Abschluss. Honorar: ab 1.000 Euro.\n\nBei Rückfragen stehen wir Ihnen jederzeit zur Verfügung.',
+    ahinw:'Dieses Angebot ist freibleibend und gilt 30 Tage ab Ausstellungsdatum.\n\nWichtig: Der BAFA-Förderantrag muss zwingend vor Beauftragung gestellt werden. Wir übernehmen die Antragstellung vollständig für Sie.\n\nHinweis zur Förderauszahlung (seit April 2025): Die BAFA überweist den Zuschuss direkt auf Ihr Konto. Sie erhalten die volle Förderung nach Abschluss der Beratung und Einreichung der Unterlagen. Eine Abtretung an den Berater ist nicht mehr möglich.\n\nMit Auftragserteilung gelten unsere AGB.',
     rtext:'Sehr geehrte Damen und Herren,\n\nvielen Dank für Ihren Auftrag. Für die erbrachten Leistungen erlauben wir uns, Ihnen beiliegende Rechnung zu stellen.\n\nBitte überweisen Sie den Gesamtbetrag innerhalb von 14 Tagen auf das unten angegebene Konto unter Angabe der Rechnungsnummer als Verwendungszweck. Die beauftragten Unterlagen übermitteln wir Ihnen umgehend nach Zahlungseingang.\n\nBei Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.',
     rhinw:'Gemäß § 19 Abs. 1 UStG (Kleinunternehmerregelung) wird keine Umsatzsteuer berechnet und ausgewiesen.\n\nVielen Dank für Ihren Auftrag!',
   }
@@ -1690,8 +1690,9 @@ const LEIST=[
   'Tagessatz Energieberatung (8 Std.)',
   'iSFP – 1-2 Familienhaus',
   'iSFP – Mehrfamilienhaus',
-  'Energiebedarfsausweis (GEG)',
-  'Energieverbrauchsausweis (GEG)',
+  'Energiebedarfsausweis (GEG / EU-Skala A–G)',
+  'Energieverbrauchsausweis (GEG / EU-Skala A–G)',
+  'WEG – iSFP Vorstellung Eigentümerversammlung',
   'Heizlastberechnung (DIN EN 12831-1)',
   'Hydraulischer Abgleich (Verfahren B)',
   'Heizlast & Hydraul. Abgleich (Kombi)',
@@ -1706,6 +1707,7 @@ const LEIST=[
   'BAFA TPN – Techn. Projektnachweis',
   'KfW BzA – Bestätigung zum Antrag',
   'KfW BnD – Bestätigung nach Durchführung',
+  'KfW BzA Heizung & Baubegleitung (Kombi)',
   'Fachplanung & Baubegleitung (KfW BEG)',
   'Baubegleitung – Einzeltermin vor Ort',
   'Anfahrtspauschale (über 30 km)',
@@ -1887,12 +1889,13 @@ function editDoc(type,id){
   $('d-nr').value=d.nr||'';
   $('d-datum').value=d.datum||today();
   $('d-datum2').value=d.datum2||'';
-  $('d-betreff').value=d.betreff||'';
   $('d-ansch').value=d.ansch||'';
   $('d-hinw').value=d.hinw||'';
   $('d-notiz').value=d.notiz||'';
   $('d-mwst').checked=d.mwst||false;
   $('d-kunde').value=d.kundeId||'';
+  // Betreff NACH Kunde setzen — verhindert Überschreiben durch fillKunde()
+  $('d-betreff').value=d.betreff||'';
   $('pos-body').innerHTML='';pCnt=0;
   (d.pos||[]).forEach(p=>addPos(p));
   cSum();
@@ -1937,16 +1940,18 @@ function addPos(data=null){
   pCnt++;const id=pCnt;
   const tbody=$('pos-body');
   const tr=document.createElement('tr');tr.id='p-'+id;
-  const safeDesc=(data?.desc||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');
   tr.innerHTML=`<td style="font-weight:700;color:var(--dk)">${tbody.children.length+1}</td>
     <td><select style="margin-bottom:4px;width:100%" onchange="onLS(${id},this.value)"><option>– Auswählen –</option>${(S_leistungen.length?S_leistungen:LEIST.filter(l=>l!=='– Auswählen –'&&l!=='– Eigene Beschreibung –').map(l=>({name:l,text:LEIST_TEXT[l]||''}))).map(l=>`<option${data&&data.desc===l.name?' selected':''}>${l.name}</option>`).join('')}<option>– Eigene Beschreibung –</option></select>
-    <input type="text" id="pd-${id}" placeholder="Beschreibung…" value="${safeDesc}" oninput="cSum()"></td>
+    <input type="text" id="pd-${id}" placeholder="Beschreibung…" value="" oninput="cSum()"></td>
     <td><input type="number" id="pm-${id}" value="${data?.menge??1}" min="0" step="0.5" oninput="cSum()"></td>
     <td><select id="pe-${id}">${['Honorar','WE','Std.','Tag','Stück','km','Termin','Pauschal'].map(e=>`<option${data?.einheit===e?' selected':''}>${e}</option>`).join('')}</select></td>
     <td><input type="number" id="pp-${id}" value="${data?.ep||''}" min="0" step="0.01" placeholder="0,00" oninput="cSum()"></td>
     <td id="ps-${id}" style="font-weight:700;white-space:nowrap">–</td>
     <td><button type="button" onclick="document.getElementById('p-${id}').remove();cSum()" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:15px">✕</button></td>`;
-  tbody.appendChild(tr);cSum();
+  tbody.appendChild(tr);
+  // Beschreibung direkt ins DOM schreiben — verhindert HTML-Encoding-Probleme
+  if(data?.desc) document.getElementById('pd-'+id).value = data.desc;
+  cSum();
 }
 
 const LEIST_TEXT = {
@@ -1956,13 +1961,14 @@ const LEIST_TEXT = {
   'Energieberatung vor Ort (BAFA EBW) inkl. individuellem Sanierungsfahrplan (iSFP)': 'Geförderte Energieberatung für Wohngebäude (BAFA EBW) gemäß Richtlinie Bundesförderung Energieberatung für Wohngebäude. Erstellung eines individuellen Sanierungsfahrplans (iSFP) mit Maßnahmenempfehlungen und Fördermöglichkeiten.',
   'Honorar nach Aufwand (Stundensatz)': 'Beratungsleistung nach tatsächlichem Zeitaufwand gemäß vereinbartem Stundensatz.',
   'Tagessatz Energieberatung (8 Std.)': 'Energieberatung pauschal für einen Beratungstag (8 Stunden) am Objekt oder im Büro.',
-  'iSFP – 1-2 Familienhaus': 'Erstellung eines individuellen Sanierungsfahrplans (iSFP) für ein Ein- oder Zweifamilienhaus gemäß BAFA-Richtlinie Energieberatung für Wohngebäude (EBW). Inkl. Bestandsaufnahme, Maßnahmenempfehlungen und Fördermittelberatung.',
+  'iSFP – 1-2 Familienhaus': 'Erstellung eines individuellen Sanierungsfahrplans (iSFP) für ein Ein- oder Zweifamilienhaus gemäß BAFA-Richtlinie Energieberatung für Wohngebäude (EBW). Inkl. Bestandsaufnahme, 3D-Gebäudemodellierung, Maßnahmenempfehlungen und Fördermittelberatung.',
   'iSFP – Mehrfamilienhaus': 'Erstellung eines individuellen Sanierungsfahrplans (iSFP) für ein Mehrfamilienhaus (ab 3 Wohneinheiten) gemäß BAFA-Richtlinie Energieberatung für Wohngebäude (EBW). Inkl. Bestandsaufnahme, Maßnahmenempfehlungen und Fördermittelberatung.',
-  'Energiebedarfsausweis (GEG)': 'Erstellung eines Energiebedarfsausweises gemäß Gebäudeenergiegesetz (GEG 2023) auf Basis einer Berechnung des Energiebedarfs des Gebäudes.',
-  'Energieverbrauchsausweis (GEG)': 'Erstellung eines Energieverbrauchsausweises gemäß Gebäudeenergiegesetz (GEG 2023) auf Basis der gemessenen Verbrauchsdaten.',
+  'Energiebedarfsausweis (GEG / EU-Skala A–G)': 'Erstellung eines Energiebedarfsausweises gemäß Gebäudeenergiegesetz (GEG) auf Basis einer Berechnung des Energiebedarfs des Gebäudes. Ausstellung nach neuer EU-Gebäuderichtlinie (EPBD) mit Effizienzklasse A–G, CO₂-Emissionen und Sanierungsempfehlungen. Pflicht bei Verkauf, Vermietung und Vertragsverlängerung.',
+  'Energieverbrauchsausweis (GEG / EU-Skala A–G)': 'Erstellung eines Energieverbrauchsausweises gemäß Gebäudeenergiegesetz (GEG) auf Basis der gemessenen Verbrauchsdaten der letzten drei Jahre. Ausstellung nach neuer EU-Gebäuderichtlinie (EPBD) mit Effizienzklasse A–G, CO₂-Emissionen und Sanierungsempfehlungen.',
+  'WEG – iSFP Vorstellung Eigentümerversammlung': 'Vorstellung des individuellen Sanierungsfahrplans (iSFP) in der Eigentümerversammlung der WEG gemäß BAFA-Richtlinie. Ermöglicht den WEG-Bonus von zusätzlich 250 € auf die BAFA-Förderung der Energieberatung.',
   'Heizlastberechnung (DIN EN 12831-1)': 'Raumweise Heizlastberechnung gemäß DIN EN 12831-1 als Grundlage für die Auslegung der Heizungsanlage und den hydraulischen Abgleich.',
-  'Hydraulischer Abgleich (Verfahren B)': 'Hydraulischer Abgleich der Heizungsanlage nach Verfahren B gemäß VDI 2073 und GEG § 60a. Inkl. Berechnung der Einstellwerte für alle Heizkörper.',
-  'Heizlast & Hydraul. Abgleich (Kombi)': 'Heizlastberechnung gem. DIN EN 12831-1 und hydraulischer Abgleich nach Verfahren B gem. VDI 2073 / GEG § 60a als Kombileistung. Inkl. Einstellprotokoll für alle Heizkörper.',
+  'Hydraulischer Abgleich (Verfahren B)': 'Hydraulischer Abgleich der Heizungsanlage nach Verfahren B gemäß VDI 2073 und GEG § 60c. Inkl. Berechnung der Einstellwerte für alle Heizkörper.',
+  'Heizlast & Hydraul. Abgleich (Kombi)': 'Heizlastberechnung gem. DIN EN 12831-1 und hydraulischer Abgleich nach Verfahren B gem. VDI 2073 / GEG § 60c als Kombileistung. Inkl. Einstellprotokoll für alle Heizkörper.',
   'Sommerlicher Wärmeschutz (DIN 4108-2)': 'Nachweis und Beurteilung des sommerlichen Wärmeschutzes gemäß DIN 4108-2. Bewertung der Sonneneintragskennwerte und Empfehlungen zur Verbesserung des Wohnkomforts im Sommer.',
   'Wärmebrückennachweis (DIN EN ISO 10211)': 'Berechnung und Nachweis von Wärmebrücken gemäß DIN EN ISO 10211 / DIN 4108 Beiblatt 2. Bewertung der Wärmebrückenwirkung und Empfehlung von Minimierungsmaßnahmen.',
   'Schimmelgutachten / Feuchteschutz (DIN 4108-3)': 'Gutachterliche Beurteilung der Schimmel- und Feuchteschäden sowie Nachweis des Feuchteschutzes gemäß DIN 4108-3. Inkl. Ursachenanalyse und Sanierungsempfehlung.',
@@ -1972,8 +1978,9 @@ const LEIST_TEXT = {
   'Thermografie-Aufnahme (DIN EN 13187)': 'Thermografische Untersuchung der Gebäudehülle gemäß DIN EN 13187. Erkennung von Wärmebrücken, Undichtigkeiten und Schwachstellen. Inkl. Auswertungsbericht mit Bildmaterial.',
   'BAFA TPB – Techn. Projektbeschreibung': 'Erstellung der Technischen Projektbeschreibung (TPB) für die Antragstellung bei der BAFA im Rahmen der Bundesförderung für effiziente Gebäude – Einzelmaßnahmen (BEG EM).',
   'BAFA TPN – Techn. Projektnachweis': 'Erstellung des Technischen Projektnachweises (TPN) als Verwendungsnachweis bei der BAFA im Rahmen der Bundesförderung für effiziente Gebäude – Einzelmaßnahmen (BEG EM).',
-  'KfW BzA – Bestätigung zum Antrag': 'Ausstellung der Bestätigung zum Antrag (BzA) als zugelassener Energieeffizienz-Experte (EEE) im Rahmen der KfW Bundesförderung für effiziente Gebäude (BEG WG / BEG NWG).',
-  'KfW BnD – Bestätigung nach Durchführung': 'Ausstellung der Bestätigung nach Durchführung (BnD) als zugelassener Energieeffizienz-Experte (EEE) im Rahmen der KfW Bundesförderung für effiziente Gebäude (BEG WG / BEG NWG).',
+  'KfW BzA – Bestätigung zum Antrag': 'Ausstellung der Bestätigung zum Antrag (BzA) als zugelassener Energieeffizienz-Experte (EEE) für die KfW Heizungsförderung (KfW 458). Erstellung vor Antragstellung im Portal Meine KfW. Bestätigung der technischen Mindestanforderungen und förderfähigen Kosten.',
+  'KfW BnD – Bestätigung nach Durchführung': 'Ausstellung der Bestätigung nach Durchführung (BnD) als zugelassener Energieeffizienz-Experte (EEE) nach Abschluss des Heizungstausches gemäß KfW 458. Voraussetzung für die Auszahlung des Förderzuschusses im Portal Meine KfW.',
+  'KfW BzA Heizung & Baubegleitung (Kombi)': 'Erstellung der Bestätigung zum Antrag (BzA) sowie Baubegleitung während des Heizungstausches gemäß KfW 458. Abschluss mit Bestätigung nach Durchführung (BnD) für die Auszahlung des Förderzuschusses. Komplettbegleitung aus einer Hand.',
   'Fachplanung & Baubegleitung (KfW BEG)': 'Fachplanung und Baubegleitung gemäß KfW-Anforderungen im Rahmen der Bundesförderung für effiziente Gebäude (BEG). Inkl. Überwachung der Ausführungsqualität und Dokumentation.',
   'Baubegleitung – Einzeltermin vor Ort': 'Baubegleitung – Einzeltermin vor Ort gemäß KfW BEG Anforderungen. Kontrolle der fachgerechten Ausführung der Sanierungsmaßnahmen und Dokumentation.',
   'Anfahrtspauschale (über 30 km)': 'Anfahrtspauschale für Fahrten über 30 km Entfernung (je Richtung) zum Objekt.',
@@ -2834,7 +2841,7 @@ async function doSendMail(){
   status.textContent='E-Mail wird gesendet…';
 
   try{
-    await emailjs.send('service_y6lebg7', 'template_cdzf5n7', {
+    await emailjs.send('service_ox0bu4t', 'template_cdzf5n7', {
       kunde_name:  kundeName,
       kunde_email: to,
       angebotsnr:  angebotsnr,
@@ -3112,7 +3119,7 @@ async function doAccept(id, autoTriggered){
     try{
       const k = docData.kundeData || {};
       const kundeName = ((k.vn||'')+' '+(k.nn||docData.kundeName||'')).trim();
-      await emailjs.send('service_y6lebg7', 'template_cdzf5n7', {
+      await emailjs.send('service_ox0bu4t', 'template_cdzf5n7', {
         kunde_name:   kundeName || 'Kunde',
         kunde_email:  'info@schaumburg-energieberatung.de',
         angebotsnr:   docData.nr || id,
@@ -3887,47 +3894,39 @@ window.addEventListener('load', function(){
 function cBafa(){
   var k = parseFloat(document.getElementById('bk').value) || 0;
   var maxZuschuss = parseInt(document.getElementById('bt').value) || 650;
-  var foerderung = Math.min(k * 0.5, maxZuschuss);
-  var eigenanteil = k - foerderung;
-  
+  var wegBonus = document.getElementById('bweg') && document.getElementById('bweg').checked ? 250 : 0;
+  var foerderung = Math.min(k * 0.5, maxZuschuss) + wegBonus;
+  var eigenanteil = k - (foerderung - wegBonus);
+
   var bmEl = document.getElementById('bm');
   var brEl = document.getElementById('br');
   var beEl = document.getElementById('be');
-  if(bmEl) bmEl.textContent = maxZuschuss + ' €';
-  if(brEl) brEl.textContent = euro(foerderung);
+  if(bmEl) bmEl.textContent = maxZuschuss + (wegBonus ? ' + 250 €' : ' €');
+  if(brEl) brEl.textContent = euro(foerderung) + (wegBonus ? ' (inkl. WEG-Bonus)' : '');
   if(beEl) beEl.textContent = euro(eigenanteil);
 }
 
 function cBeg(){
   var inv = parseFloat(document.getElementById('ei').value) || 0;
   var q = parseInt(document.getElementById('em').value) || 15;
-  var ek = document.getElementById('ek') && document.getElementById('ek').checked;
   var eisfp = document.getElementById('eisfp') && document.getElementById('eisfp').checked;
-  var ekNat = document.getElementById('ek-nat') && document.getElementById('ek-nat').checked;
-  
-  // Natürlichkeit-Bonus nur bei Wärmepumpe (value=30 erste Option)
-  var emVal = document.getElementById('em') ? document.getElementById('em').value : '15';
-  var emText = document.getElementById('em') ? document.getElementById('em').options[document.getElementById('em').selectedIndex].text : '';
-  var isWP = emText.indexOf('Wärmepumpe') >= 0;
-  var natRow = document.getElementById('ek-nat-row');
-  if(natRow) natRow.style.display = isWP ? 'flex' : 'none';
-  if(!isWP && document.getElementById('ek-nat')) document.getElementById('ek-nat').checked = false;
-  
+
   var quote = q / 100;
-  if(ek) quote += 0.20;
   if(eisfp) quote += 0.05;
-  if(isWP && ekNat) quote += 0.05;
   quote = Math.min(quote, 0.70);
-  
-  // Max förderfähige Kosten: 60.000 €
-  var foerderBasis = Math.min(inv, 60000);
+
+  // Max förderfähige Kosten: 30.000 € ohne iSFP, 60.000 € mit iSFP
+  var maxFK = eisfp ? 60000 : 30000;
+  var foerderBasis = Math.min(inv, maxFK);
   var foerderung = foerderBasis * quote;
   var eigenanteil = inv - foerderung;
-  
+
   var eqEl = document.getElementById('eq');
+  var efkEl = document.getElementById('efk');
   var erEl = document.getElementById('er');
   var eeEl = document.getElementById('ee');
   if(eqEl) eqEl.textContent = Math.round(quote * 100) + '%';
+  if(efkEl) efkEl.textContent = (eisfp ? '60.000' : '30.000') + ' €';
   if(erEl) erEl.textContent = euro(foerderung);
   if(eeEl) eeEl.textContent = euro(eigenanteil);
 }
