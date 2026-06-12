@@ -249,7 +249,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 #prev-wrap{width:100%;max-width:700px;margin:0 auto;background:white;
   box-shadow:0 0 30px rgba(0,0,0,.1);border-radius:4px;overflow:hidden;font-family:'DM Sans',sans-serif;}
 .dh{background:#0D3B36;padding:0;display:flex;justify-content:space-between;align-items:stretch;overflow:hidden;min-height:120px}
-.dl{width:auto;height:auto;max-height:130px;min-height:120px;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:stretch}
+.dl{width:auto;height:auto;max-height:120px;min-height:unset;object-fit:contain;display:block;border-radius:0;flex-shrink:0;margin:0;padding:0;background:#0D3B36;box-sizing:border-box;align-self:center}
 .dr{text-align:right;padding:16px 22px;display:flex;flex-direction:column;justify-content:center}
 .dn{font-family:'Cormorant Garamond',serif;font-size:53px;color:#C9A961;font-weight:800;font-style:italic;letter-spacing:.3px;line-height:1.2}
 .ds{font-family:'DM Sans',sans-serif;font-size:9.5px;color:#C8BFA0;margin-top:5px;letter-spacing:2px;font-style:normal;font-weight:600;text-transform:uppercase;-webkit-font-smoothing:antialiased}
@@ -392,7 +392,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   .dsum { padding-bottom: 80px !important; }
   /* Header */
   .dh { padding: 0 !important; min-height: 100px !important; overflow: visible !important; }
-  .dl { height: 100px !important; width: auto !important; min-height: unset !important; max-height: unset !important; object-fit: contain !important; align-self: flex-start !important; }
+  .dl { height: auto !important; width: auto !important; max-height: 90px !important; min-height: unset !important; object-fit: contain !important; align-self: center !important; }
   .dn { font-family: 'Cormorant Garamond', serif !important; font-size: 26px !important; line-height: 1.2 !important; }
   .ds { font-family: 'DM Sans', sans-serif !important; font-size: 8.5px !important; }
   .dc { font-size: 9.5px !important; line-height: 1.7 !important; }
@@ -2320,11 +2320,18 @@ async function downloadPDFjsPDF(){
       pdf.setFillColor(...DK);
       pdf.rect(0, 0, pW, 36, 'F');
 
-      // Logo einbetten
+      // Logo einbetten (Seitenverhältnis erhalten)
       const logoB64 = window._kvLogo || null;
       if(logoB64){
         try{
-          pdf.addImage('data:image/jpeg;base64,'+logoB64, 'JPEG', 1, 1, 38, 34);
+          const imgProps = pdf.getImageProperties('data:image/jpeg;base64,'+logoB64);
+          const maxW = 38, maxH = 34;
+          const aspect = imgProps.width / imgProps.height;
+          let logoW, logoH;
+          if(aspect >= maxW / maxH){ logoW = maxW; logoH = maxW / aspect; }
+          else { logoH = maxH; logoW = maxH * aspect; }
+          const logoY = 1 + (maxH - logoH) / 2;
+          pdf.addImage('data:image/jpeg;base64,'+logoB64, 'JPEG', 1, logoY, logoW, logoH);
         }catch(e){
           pdf.setTextColor(...GOLD);
           pdf.setFont('helvetica','bold');
@@ -2446,16 +2453,28 @@ async function downloadPDFjsPDF(){
       y += 11;
     }
 
-    // Anschreiben
+    // Anschreiben (vollständig, mit automatischem Seitenumbruch)
     if(d.ansch){
       pdf.setFont('helvetica','normal');
       pdf.setFontSize(8);
       pdf.setTextColor(60,60,60);
       const anschLines = pdf.splitTextToSize(d.ansch, cW);
-      // Max 8 Zeilen Anschreiben im PDF
-      const maxAnsch = Math.min(anschLines.length, 8);
-      pdf.text(anschLines.slice(0, maxAnsch), ml, y);
-      y += maxAnsch * 4 + 4;
+      const anschLineH = 4;
+      for(let i = 0; i < anschLines.length; i++){
+        if(y + anschLineH > footY - 8){
+          drawFooter();
+          pdf.addPage();
+          drawHeader();
+          drawFooter();
+          y = 42;
+          pdf.setFont('helvetica','normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(60,60,60);
+        }
+        pdf.text(anschLines[i], ml, y);
+        y += anschLineH;
+      }
+      y += 4;
     }
 
     // ── POSITIONS-TABELLE ──
@@ -2480,6 +2499,28 @@ async function downloadPDFjsPDF(){
       // Zeilenhöhe dynamisch (lange Beschreibungen)
       const descLines = pdf.splitTextToSize(p.desc||'', cW-65);
       const rowH = Math.max(7, descLines.length * 4 + 3);
+
+      // Seitenumbruch wenn Zeile nicht mehr passt
+      if(y + rowH > footY - 8){
+        drawFooter();
+        pdf.addPage();
+        drawHeader();
+        drawFooter();
+        y = 42;
+        // Tabellen-Header wiederholen
+        pdf.setFillColor(...DK);
+        pdf.rect(ml, y, cW, 7, 'F');
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(...GOLD);
+        pdf.text('Pos.', ml+2, y+4.5);
+        pdf.text('Leistungsbeschreibung', ml+12, y+4.5);
+        pdf.text('Menge', ml+cW-55, y+4.5, {align:'right'});
+        pdf.text('Einheit', ml+cW-42, y+4.5, {align:'right'});
+        pdf.text('EP (€)', ml+cW-22, y+4.5, {align:'right'});
+        pdf.text('Summe (€)', ml+cW, y+4.5, {align:'right'});
+        y += 7;
+      }
 
       if(even){
         pdf.setFillColor(247,249,248);
@@ -2575,15 +2616,28 @@ async function downloadPDFjsPDF(){
       y += 12;
     }
 
-    // Zahlungshinweis
+    // Zahlungshinweis (vollständig, kein Limit)
     if(d.hinw){
       pdf.setFont('helvetica','normal');
       pdf.setFontSize(7.5);
       pdf.setTextColor(80,80,80);
       const hinwLines = pdf.splitTextToSize(d.hinw, cW);
-      const maxHinw = Math.min(hinwLines.length, 6);
-      pdf.text(hinwLines.slice(0, maxHinw), ml, y);
-      y += maxHinw * 3.5 + 4;
+      const hinwLineH = 3.5;
+      for(let i = 0; i < hinwLines.length; i++){
+        if(y + hinwLineH > footY - 8){
+          drawFooter();
+          pdf.addPage();
+          drawHeader();
+          drawFooter();
+          y = 42;
+          pdf.setFont('helvetica','normal');
+          pdf.setFontSize(7.5);
+          pdf.setTextColor(80,80,80);
+        }
+        pdf.text(hinwLines[i], ml, y);
+        y += hinwLineH;
+      }
+      y += 4;
     }
 
     // ── QR-CODE (nur Rechnungen, wenn IBAN vorhanden) ──
