@@ -2688,7 +2688,8 @@ async function downloadPDFjsPDF(){
     {
       const positionen_check = (d.pos||[]).filter(p=>p.desc&&p.desc.trim()&&p.desc!=='– Auswählen –'&&p.desc!=='– Eigene Beschreibung –');
       const totalTableH = positionen_check.reduce((acc, p) => {
-        const dl = pdf.splitTextToSize(p.desc||'', descMaxW);
+        pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      const dl = pdf.splitTextToSize(p.desc||'', descMaxW);
         return acc + Math.max(8, dl.length * 4 + 4);
       }, 7);
       const sumBoxH_check = d.mwst ? 28 : 22;
@@ -2725,7 +2726,10 @@ async function downloadPDFjsPDF(){
     positionen.forEach((p,i)=>{
       const even = i%2===0;
 
-      // Beschreibung auf korrekte Breite umbrechen (BUG 1 FIX)
+      // Beschreibung: Font ZUERST setzen, dann splitTextToSize (BUG 1 ROOT CAUSE FIX)
+      // splitTextToSize muss mit gleicher Schriftgröße aufgerufen werden wie beim Rendern!
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(8);
       const descLines = pdf.splitTextToSize(p.desc||'', descMaxW);
       const lineH = 4;
       const rowH = Math.max(8, descLines.length * lineH + 4);
@@ -2778,7 +2782,7 @@ async function downloadPDFjsPDF(){
       y += rowH;
     });
 
-    y += 10; // BUG 2 FIX: min. 10mm Abstand nach letzter Position vor Summenbox
+    y += 14; // BUG 2 FIX: 14mm Abstand nach letzter Position vor Summenbox
 
 
     // ── SUMMEN-BOX ──
