@@ -272,7 +272,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
 .dtbl{width:100%;border-collapse:collapse;font-size:11.5px;margin:0}
 .dtbl th{background:#0D3B36;color:#C9A961;padding:8px 10px;text-align:left;
   font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
-.dtbl td{padding:8px 10px;border-bottom:1px solid #EEF2F1;vertical-align:top}
+.dtbl td{padding:8px 10px;border-bottom:1px solid #EEF2F1;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word;white-space:normal}
+.dtbl td.desc-col{max-width:300px}
 .dtbl tr:nth-child(even) td{background:#F7F9F8}
 .dsum{display:flex;justify-content:flex-end;padding:10px 22px 0}
 .dsbox{background:#0D3B36;border-radius:7px;padding:12px 15px;min-width:240px}
@@ -415,7 +416,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--g1);color:var(--dk);min-h
   /* Tabelle */
   .dtbl { font-size: 10.5px !important; }
   .dtbl th { padding: 6px 8px !important; font-size: 9px !important; }
-  .dtbl td { padding: 6px 8px !important; }
+  .dtbl td { padding: 6px 8px !important; word-wrap: break-word !important; overflow-wrap: break-word !important; white-space: normal !important; }
+  .dtbl td.desc-col { max-width: 300px !important; }
   /* Summe */
   .dsum { padding: 8px 20px 0 !important; }
   .dsbox { padding: 10px 14px !important; min-width: 210px !important; }
@@ -1729,7 +1731,7 @@ async function prevDoc(type, id){
     .filter(p=>p.desc && p.desc.trim() && p.desc!=='– Auswählen –' && p.desc!=='– Eigene Beschreibung –')
     .map((p,i)=>`<tr>
       <td style="text-align:center;font-weight:700;width:28px">${i+1}</td>
-      <td>${p.desc}</td>
+      <td class="desc-col">${p.desc}</td>
       <td style="text-align:center;width:50px">${p.menge||1}</td>
       <td style="text-align:center;width:60px">${p.einheit||'Pauschal'}</td>
       <td style="text-align:right;width:75px">${p.ep>0?euro(p.ep):'–'}</td>
@@ -1935,9 +1937,10 @@ function addPos(data=null){
   pCnt++;const id=pCnt;
   const tbody=$('pos-body');
   const tr=document.createElement('tr');tr.id='p-'+id;
+  const safeDesc=(data?.desc||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');
   tr.innerHTML=`<td style="font-weight:700;color:var(--dk)">${tbody.children.length+1}</td>
     <td><select style="margin-bottom:4px;width:100%" onchange="onLS(${id},this.value)"><option>– Auswählen –</option>${(S_leistungen.length?S_leistungen:LEIST.filter(l=>l!=='– Auswählen –'&&l!=='– Eigene Beschreibung –').map(l=>({name:l,text:LEIST_TEXT[l]||''}))).map(l=>`<option${data&&data.desc===l.name?' selected':''}>${l.name}</option>`).join('')}<option>– Eigene Beschreibung –</option></select>
-    <input type="text" id="pd-${id}" placeholder="Beschreibung…" value="${data?.desc||''}" oninput="cSum()"></td>
+    <input type="text" id="pd-${id}" placeholder="Beschreibung…" value="${safeDesc}" oninput="cSum()"></td>
     <td><input type="number" id="pm-${id}" value="${data?.menge??1}" min="0" step="0.5" oninput="cSum()"></td>
     <td><select id="pe-${id}">${['Honorar','WE','Std.','Tag','Stück','km','Termin','Pauschal'].map(e=>`<option${data?.einheit===e?' selected':''}>${e}</option>`).join('')}</select></td>
     <td><input type="number" id="pp-${id}" value="${data?.ep||''}" min="0" step="0.01" placeholder="0,00" oninput="cSum()"></td>
@@ -2733,6 +2736,15 @@ function sendMail(){
   const isA=type==='angebot';
   const k=doc.kundeData||{};
   const url=`https://schaumburg-app.netlify.app/?typ=${type}&id=${doc.id}`;
+
+  // Daten für doSendMail bereitstellen
+  window._mailRef = {
+    docId: doc.id,
+    typ: type,
+    nr: doc.nr||'',
+    betreff: doc.betreff||'',
+    kundeName: (k.vn||'')+' '+(k.nn||doc.kundeName||'')
+  };
   
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(7,31,28,.6);backdrop-filter:blur(5px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
@@ -2774,7 +2786,7 @@ ${C.email||'info@schaumburg-energieberatung.de'}</textarea>
         <div style="display:flex;gap:10px">
           <button onclick="doSendMail()" id="mail-send-btn"
             style="flex:1;padding:12px;background:linear-gradient(135deg,#C9A961,#DFC07A);color:#0D3B36;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif">
-            📧 In Mail öffnen
+            📧 E-Mail senden
           </button>
           <button onclick="this.closest('div[style*=fixed]').remove()"
             style="padding:12px 18px;background:transparent;border:1.5px solid #EEF2F1;border-radius:10px;color:#0D3B36;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif">
@@ -2793,7 +2805,8 @@ async function doSendMail(){
   const subj=document.getElementById('mail-subj').value.trim();
   const msg=document.getElementById('mail-msg').value.trim();
   const status=document.getElementById('mail-status');
-  
+  const sendBtn=document.getElementById('mail-send-btn');
+
   if(!to){
     status.style.display='block';
     status.style.background='#FEE2E2';
@@ -2801,26 +2814,60 @@ async function doSendMail(){
     status.textContent='❌ Bitte E-Mail-Adresse eingeben!';
     return;
   }
-  
-  // IONOS Webmail mit fertigem Text öffnen
-  const mailtoUrl = 'mailto:'+to
-    +'?subject='+encodeURIComponent(subj)
-    +'&body='+encodeURIComponent(msg);
-  
-  window.open(mailtoUrl, '_blank');
-  
+
+  // Daten aus aktuellem Dokument
+  const ref = window._mailRef || {};
+  const docId = ref.docId || '';
+  const typ = ref.typ || 'angebot';
+  const angebotsnr = ref.nr || '';
+  const betreff = ref.betreff || subj;
+  const kundeName = ref.kundeName || to;
+  const annahmeLink = typ === 'angebot'
+    ? `https://schaumburg-app.netlify.app/?typ=angebot&id=${docId}&annehmen=1`
+    : `https://schaumburg-app.netlify.app/?typ=rechnung&id=${docId}`;
+
+  sendBtn.disabled = true;
+  sendBtn.textContent = '⏳ Wird gesendet…';
   status.style.display='block';
-  status.style.background='#D1FAE5';
-  status.style.color='#065F46';
-  status.innerHTML='✅ Mail-Programm geöffnet!<br><small>Falls es nicht öffnet: Strg+V in IONOS Webmail</small>';
-  
-  // Text auch in Zwischenablage kopieren als Backup
-  try{ await navigator.clipboard.writeText(msg); }catch(ex){}
-  
-  setTimeout(()=>{
-    document.querySelector('div[style*="position:fixed"]')?.remove();
-  },3000);
-  toast('Mail-Fenster geöffnet!','s');
+  status.style.background='#FEF9C3';
+  status.style.color='#854D0E';
+  status.textContent='E-Mail wird gesendet…';
+
+  try{
+    await emailjs.send('service_y6lebg7', 'template_cdzf5n7', {
+      kunde_name:  kundeName,
+      kunde_email: to,
+      angebotsnr:  angebotsnr,
+      betreff:     betreff,
+      annahme_link: annahmeLink,
+      nachricht:   msg
+    });
+
+    status.style.background='#D1FAE5';
+    status.style.color='#065F46';
+    status.innerHTML='✅ E-Mail erfolgreich gesendet!';
+    sendBtn.textContent='✅ Gesendet';
+
+    // Versand-Datum in Firestore speichern
+    if(docId && typ === 'angebot'){
+      try{
+        await db.collection('angebote').doc(docId).update({ mailVersandt: new Date().toISOString().split('T')[0] });
+        const i = S.angebote.findIndex(x=>x.id===docId);
+        if(i>=0) S.angebote[i].mailVersandt = new Date().toISOString().split('T')[0];
+      }catch(ex){}
+    }
+
+    setTimeout(()=>{ document.querySelector('div[style*="position:fixed"]')?.remove(); }, 2500);
+    toast('✅ E-Mail an '+to+' gesendet!', 's');
+
+  }catch(err){
+    console.error('EmailJS Fehler:', err);
+    status.style.background='#FEE2E2';
+    status.style.color='#991B1B';
+    status.innerHTML='❌ Senden fehlgeschlagen: '+(err.text||err.message||JSON.stringify(err));
+    sendBtn.disabled = false;
+    sendBtn.textContent='📧 Erneut senden';
+  }
 }
 
 function openQuickKunde(){
@@ -2870,6 +2917,7 @@ window._kvLogo = "/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAA
   window._isKundenView = !!(typ && docId);
   window._kvTyp = typ;
   window._kvDocId = docId;
+  window._kvAnnehmen = params.get('annehmen') === '1';
   
   if(typ && docId){
     // Sofort alles verstecken - nur bei echtem Kunden-Link
@@ -3026,6 +3074,11 @@ async function loadKundenDoc(typ, docId){
     document.getElementById('kv-doc').style.display='block';
     document.getElementById('kv-acts').style.display='flex';
     document.title = (isA?'Angebot ':'Rechnung ')+d.nr+' – Schaumburg Energieberatung';
+
+    // Auto-Accept wenn Link mit &annehmen=1 geöffnet wurde
+    if(window._kvAnnehmen && isA && d.status !== 'Angenommen'){
+      setTimeout(() => doAccept(docId, true), 800);
+    }
     
   }catch(e){
     console.error('Ladefehler:', e);
@@ -3034,20 +3087,48 @@ async function loadKundenDoc(typ, docId){
   }
 }
 
-async function doAccept(id){
+async function doAccept(id, autoTriggered){
   const btn = document.getElementById('acc-btn');
-  if(!btn)return;
-  btn.textContent='Wird gespeichert…'; btn.disabled=true;
+  if(!autoTriggered){
+    if(!btn)return;
+    btn.textContent='Wird gespeichert…'; btn.disabled=true;
+  }
   try{
-    await firebase.firestore().collection('angebote').doc(id).update({
+    const fdb = firebase.firestore();
+    const snap = await fdb.collection('angebote').doc(id).get();
+    const docData = snap.exists ? snap.data() : {};
+
+    await fdb.collection('angebote').doc(id).update({
       status:'Angenommen',
       angenommenAm: new Date().toISOString().split('T')[0]
     });
-    document.querySelector('.acc-box').outerHTML = 
+
+    // Erfolgs-Anzeige in der Kunden-Ansicht
+    const accBox = document.querySelector('.acc-box');
+    if(accBox) accBox.outerHTML =
       '<div class="acc-done"><p>✅ Vielen Dank! Ihr Angebot wurde angenommen.<br>Wir melden uns in Kürze bei Ihnen.</p></div>';
+
+    // Benachrichtigungs-Mail an Schaumburg
+    try{
+      const k = docData.kundeData || {};
+      const kundeName = ((k.vn||'')+' '+(k.nn||docData.kundeName||'')).trim();
+      await emailjs.send('service_y6lebg7', 'template_cdzf5n7', {
+        kunde_name:   kundeName || 'Kunde',
+        kunde_email:  'info@schaumburg-energieberatung.de',
+        angebotsnr:   docData.nr || id,
+        betreff:      '✅ Angebot ' + (docData.nr||id) + ' wurde angenommen!',
+        annahme_link: 'https://schaumburg-app.netlify.app/?typ=angebot&id='+id,
+        nachricht:    'Der Kunde '+kundeName+' hat das Angebot '+
+                      (docData.nr||id)+' am '+new Date().toLocaleDateString('de-DE')+' angenommen.\n\n'+
+                      'Betreff: '+(docData.betreff||'–')+'\n'+
+                      'Betrag: '+(docData.gesamt ? new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(docData.gesamt) : '–')
+      });
+    }catch(mailErr){ console.warn('Benachrichtigung fehlgeschlagen:', mailErr); }
+
   }catch(e){
-    btn.textContent='✅ Angebot annehmen'; btn.disabled=false;
-    alert('Fehler: '+e.message);
+    if(btn){ btn.textContent='✅ Angebot annehmen'; btn.disabled=false; }
+    if(!autoTriggered) alert('Fehler: '+e.message);
+    else console.error('Auto-Accept Fehler:', e.message);
   }
 }
 
