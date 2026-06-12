@@ -2478,6 +2478,26 @@ async function downloadPDFjsPDF(){
     }
 
     // ── POSITIONS-TABELLE ──
+    // Vor Tabellenstart prüfen: passt Tabelle + Summe noch auf diese Seite?
+    // Mindestbedarf: Header(7) + erste Position(~12) + Summe(~32) + Puffer(5)
+    {
+      const positionen_check = (d.pos||[]).filter(p=>p.desc&&p.desc.trim()&&p.desc!=='– Auswählen –'&&p.desc!=='– Eigene Beschreibung –');
+      const totalTableH = positionen_check.reduce((acc, p) => {
+        const dl = pdf.splitTextToSize(p.desc||'', cW-65);
+        return acc + Math.max(7, dl.length * 4 + 3);
+      }, 7); // 7 = Tabellen-Header
+      const sumBoxH_check = d.mwst ? 28 : 22;
+      const totalNeeded = totalTableH + sumBoxH_check + 20; // 20 = Puffer für §19, QR etc.
+      const remainingSpace = footY - y - 8;
+      if(remainingSpace < totalNeeded && remainingSpace < footY - 42){
+        // Nicht genug Platz: Tabelle auf neue Seite
+        drawFooter();
+        pdf.addPage();
+        drawHeader();
+        drawFooter();
+        y = 42;
+      }
+    }
     // Tabellen-Header
     pdf.setFillColor(...DK);
     pdf.rect(ml, y, cW, 7, 'F');
