@@ -1365,9 +1365,12 @@ emailjs.init('v5WRshMNtFVNfv6rB');
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Kunden-Ansicht: nach Firebase init laden
+// Kunden-Ansicht: warten bis Firebase Auth bereit ist, dann einmalig laden
 if(window._isKundenView){
-  loadKundenDoc(window._kvTyp, window._kvDocId);
+  const _unsubKv = firebase.auth().onAuthStateChanged(() => {
+    _unsubKv(); // nur einmal feuern
+    loadKundenDoc(window._kvTyp, window._kvDocId);
+  });
 }
 
 // STATE
@@ -2841,13 +2844,16 @@ async function doSendMail(){
   status.textContent='E-Mail wird gesendet…';
 
   try{
+    // Erste Zeile (Anrede) entfernen — steht bereits im EmailJS-Template
+    const nachrichtOhneAnrede = msg.replace(/^[^\n]+\n\n?/, '');
+
     await emailjs.send('service_ox0bu4t', 'template_cdzf5n7', {
       kunde_name:  kundeName,
       kunde_email: to,
       angebotsnr:  angebotsnr,
       betreff:     betreff,
       annahme_link: annahmeLink,
-      nachricht:   msg
+      nachricht:   nachrichtOhneAnrede
     });
 
     status.style.background='#D1FAE5';
