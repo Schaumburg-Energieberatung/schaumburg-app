@@ -1965,14 +1965,15 @@ async function prevDoc(type, id){
     </div>
     ${d.ansch?`<div class="dansch">${d.ansch}</div>`:''}
     <div class="dtw">
-      <table class="dtbl">
+      <table class="dtbl" style="table-layout:fixed;width:100%">
+        <colgroup><col style="width:35px"><col><col style="width:60px"><col style="width:65px"><col style="width:75px"><col style="width:85px"></colgroup>
         <thead><tr>
           <th style="width:35px">Pos.</th>
           <th>Leistungsbeschreibung</th>
-          <th style="width:50px;text-align:center">Menge</th>
-          <th style="width:60px;text-align:center">Einheit</th>
+          <th style="width:60px;text-align:center">Menge</th>
+          <th style="width:65px;text-align:center">Einheit</th>
           <th style="width:75px;text-align:right">EP (€)</th>
-          <th style="width:80px;text-align:right">Summe (€)</th>
+          <th style="width:85px;text-align:right">Summe (€)</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -3240,14 +3241,15 @@ async function loadKundenDoc(typ, docId){
       </div>
       ${d.ansch?`<div class="dansch">${d.ansch}</div>`:''}
       <div class="dtw">
-        <table class="dtbl">
+        <table class="dtbl" style="table-layout:fixed;width:100%">
+          <colgroup><col style="width:35px"><col><col style="width:60px"><col style="width:65px"><col style="width:75px"><col style="width:85px"></colgroup>
           <thead><tr>
             <th style="width:35px">Pos.</th>
             <th>Leistungsbeschreibung</th>
-            <th style="width:50px;text-align:center">Menge</th>
-            <th style="width:60px;text-align:center">Einheit</th>
+            <th style="width:60px;text-align:center">Menge</th>
+            <th style="width:65px;text-align:center">Einheit</th>
             <th style="width:75px;text-align:right">EP (€)</th>
-            <th style="width:80px;text-align:right">Summe (€)</th>
+            <th style="width:85px;text-align:right">Summe (€)</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
