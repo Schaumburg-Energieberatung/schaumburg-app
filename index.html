@@ -1919,7 +1919,7 @@ async function prevDoc(type, id){
     .filter(p=>p.desc && p.desc.trim() && p.desc!=='– Auswählen –' && p.desc!=='– Eigene Beschreibung –')
     .map((p,i)=>`<tr>
       <td style="text-align:center;font-weight:700;width:28px">${i+1}</td>
-      <td class="desc-col">${p.desc}</td>
+      <td class="desc-col" style="max-width:240px;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;padding-right:16px">${p.desc}</td>
       <td style="text-align:center;width:50px;padding-left:14px">${p.menge||1}</td>
       <td style="text-align:center;width:60px">${p.einheit||'Pauschal'}</td>
       <td style="text-align:right;width:75px">${p.ep>0?euro(p.ep):'–'}</td>
@@ -1977,7 +1977,7 @@ async function prevDoc(type, id){
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div class="dsum">
+    <div class="dsum" style="margin-top:24px">
       <div class="dsbox">
         <div class="dsr"><span class="dsl">Netto:</span><span class="dsv">${euro(d.netto||0)}</span></div>
         ${mwstRow}
@@ -3188,7 +3188,7 @@ async function loadKundenDoc(typ, docId){
               p.desc!=='– Eigene Beschreibung –')
       .map((p,i)=>`<tr>
         <td style="text-align:center;font-weight:700;width:28px">${i+1}</td>
-        <td>${p.desc}</td>
+        <td style="max-width:240px;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;padding-right:16px">${p.desc}</td>
         <td style="text-align:center;width:50px;padding-left:14px">${p.menge||1}</td>
         <td style="text-align:center;width:60px">${p.einheit||'Pauschal'}</td>
         <td style="text-align:right;width:75px">${p.ep>0?euro(p.ep):'–'}</td>
@@ -3252,7 +3252,7 @@ async function loadKundenDoc(typ, docId){
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="dsum">
+      <div class="dsum" style="margin-top:24px">
         <div class="dsbox">
           <div class="dsr"><span class="dsl">Netto:</span><span class="dsv">${euro(d.netto||0)}</span></div>
           ${mwstRow}
