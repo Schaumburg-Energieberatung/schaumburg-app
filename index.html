@@ -2829,12 +2829,13 @@ async function downloadPDFjsPDF(){
     pdf.line(sumBoxX+2, sy-1, sumBoxX+sumBoxW-2, sy-1);
     sy += 2;
 
+    sy += 2;
     pdf.setFont('helvetica','bold');
     pdf.setFontSize(9);
     pdf.setTextColor(...GOLD);
-    pdf.text('GESAMTBETRAG:', sumBoxX+3, sy);
+    pdf.text('GESAMTBETRAG:', sumBoxX+3, sy+1);
     pdf.setFontSize(11);
-    pdf.text(euro(d.gesamt||0), sumBoxX+sumBoxW-3, sy, {align:'right'});
+    pdf.text(euro(d.gesamt||0), sumBoxX+sumBoxW-3, sy+1, {align:'right'});
 
     y += sumBoxH + 4;
 
